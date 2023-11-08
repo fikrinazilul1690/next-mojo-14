@@ -1,8 +1,7 @@
 import { Skeleton } from '@nextui-org/skeleton';
 import { Card, CardBody, CardFooter } from '@nextui-org/card';
 import { Button } from '@nextui-org/button';
-import { Chip } from '@nextui-org/chip';
-import { AiOutlineCheck } from 'react-icons/ai';
+import { Select } from '@nextui-org/react';
 
 export function FeaturedProductCardSkeleton() {
   return (
@@ -137,4 +136,38 @@ export function AddressCardSkeleton() {
 
 export function AddressesListSkeleton() {
   return [...Array(3)].map((_, key) => <AddressCardSkeleton key={key} />);
+}
+
+export function SelectSkeleton() {
+  return <Skeleton className='rounded-lg w-full h-[74px]' />;
+}
+
+export function CheckoutSummarySkeleton() {
+  return (
+    <div className='w-full flex flex-col gap-2 items-center'>
+      <Skeleton className='rounded-sm w-full'>
+        <div className='flex justify-between items-center'>
+          <span className='font-bold'>Sub Total</span>
+        </div>
+      </Skeleton>
+      <Skeleton className='rounded-sm w-full'>
+        <div className='flex justify-between items-center'>
+          <span className='font-bold'>Shipping Cost</span>
+        </div>
+      </Skeleton>
+      <Skeleton className='rounded-sm w-full'>
+        <div className='flex justify-between items-center'>
+          <span className='font-bold'>Grand Total</span>
+        </div>
+      </Skeleton>
+    </div>
+  );
+}
+
+export function CheckoutButtonSkeleton() {
+  return (
+    <Skeleton className='rounded-md'>
+      <Button>Checkout</Button>
+    </Skeleton>
+  );
 }

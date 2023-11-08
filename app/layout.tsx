@@ -4,6 +4,7 @@ import './globals.css';
 import { UIProviders } from './context/nextui-provider';
 import Toaster from '@/app/ui/toast';
 import QRProvider from './context/query-client-provider';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,7 +22,10 @@ export default function RootLayout({
     <html lang='en'>
       <body className={inter.className}>
         <UIProviders>
-          <QRProvider>{children}</QRProvider>
+          <QRProvider>
+            {children}
+            <ReactQueryDevtools initialIsOpen={false} />
+          </QRProvider>
         </UIProviders>
         <Toaster />
       </body>

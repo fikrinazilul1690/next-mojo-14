@@ -1,5 +1,5 @@
 'use client';
-import { Key, memo, useReducer, useState } from 'react';
+import { Key, useReducer, useState } from 'react';
 import { Card, CardBody, CardFooter, CardHeader } from '@nextui-org/card';
 import { Tabs, Tab } from '@nextui-org/tabs';
 import Image from 'next/image';
@@ -33,9 +33,7 @@ function reducer(state: SelectedState, action: SelectedAction) {
   }
 }
 
-const ProductImages = memo(function ProductImages({
-  product: { images, model },
-}: Props) {
+export default function ProductImages({ product: { images, model } }: Props) {
   const initialState: FileResponse = images.filter(
     (image) => image.order === 0
   )[0];
@@ -119,6 +117,4 @@ const ProductImages = memo(function ProductImages({
       )}
     </Card>
   );
-});
-
-export default ProductImages;
+}

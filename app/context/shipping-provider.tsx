@@ -2,22 +2,29 @@
 import { useState, createContext, useContext } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { Pricing } from '../lib/definitions';
 
 type State = {
   addressId: number | null;
   courierService: string | null;
+  shippingCost: number;
+  bank: string | null;
 };
 
 type Action = {
   reset: () => void;
   setAddressId: (addressId: number) => void;
-  setCourier: (courierService: string) => void;
+  setCourier: (courierService: Pricing | null) => void;
+  setShippingCost: (shippingCost: number) => void;
+  setBank: (bank: string) => void;
   resetCourier: () => void;
 };
 
 const initialState: State = {
   addressId: null,
   courierService: null,
+  bank: null,
+  shippingCost: 0,
 };
 
 // the store itself does not need any change
@@ -30,6 +37,7 @@ export const createStore = () =>
           set({
             addressId: null,
             courierService: null,
+            bank: null,
           }),
         setAddressId: (addressId) => {
           set(() => ({
@@ -37,14 +45,23 @@ export const createStore = () =>
           }));
           get().resetCourier();
         },
-        setCourier: (courierService) =>
+        setCourier: (pricing) => {
+          const courierService = `${pricing?.courier_code}_${pricing?.courier_service_code}`;
           set(() => ({
             courierService,
+            shippingCost: pricing?.price,
+          }));
+        },
+        setBank: (bank) =>
+          set(() => ({
+            bank,
           })),
         resetCourier: () =>
           set(() => ({
             courierService: undefined,
+            shippingCost: 0,
           })),
+        setShippingCost: (shippingCost) => set(() => ({ shippingCost })),
       }),
       {
         name: 'shipping',

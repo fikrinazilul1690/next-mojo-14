@@ -4,7 +4,6 @@ import { Card, CardHeader, CardBody } from '@nextui-org/card';
 import { GoDotFill } from 'react-icons/go';
 import { Product, Variant } from '@/app/lib/definitions';
 import { formatIDR } from '@/app/lib/utils';
-import React, { useMemo } from 'react';
 type Props = {
   product: Product;
   selectedVariant: Variant;
@@ -16,13 +15,9 @@ export default function ProductDetail({
   children,
   selectedVariant: variant,
 }: Props) {
-  const productName = useMemo(
-    () =>
-      variant.variant_name
-        ? `${product.name} - (${variant.variant_name.replace('_', ', ')})`
-        : product.name,
-    [product.name, variant.variant_name]
-  );
+  const productName = variant.variant_name
+    ? `${product.name} - (${variant.variant_name.replace('_', ', ')})`
+    : product.name;
   return (
     <Card
       className='max-w-md max-xl:max-w-sm gap-5'

@@ -4,22 +4,18 @@ import { Button } from '@nextui-org/button';
 import { Suspense, useState } from 'react';
 import { LuShoppingCart } from 'react-icons/lu';
 import { Listbox, ListboxItem } from '@nextui-org/listbox';
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
-import { fetchCart, fetchTotalCart } from '@/app/lib/client-data';
+import { fetchCart } from '@/app/lib/client-data';
 import { Card } from '@nextui-org/card';
 import { Spinner } from '@nextui-org/spinner';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useTotalCart } from '@/app/context/cart-provider';
 
 export default function DropdownCart() {
+  const [totalCart] = useTotalCart();
   const [isDropdownVisible, setDropdownVisible] = useState(false);
-  const { data: session } = useSession();
-  const { data: totalCart } = useQuery({
-    queryKey: ['cart', session?.accessToken, { type: 'total' }],
-    queryFn: () => fetchTotalCart(session),
-    enabled: !!session?.accessToken,
-  });
   const handleMouseEnter = () => {
     setDropdownVisible(true);
   };
@@ -39,14 +35,15 @@ export default function DropdownCart() {
         as={Link}
         href='/cart'
         isIconOnly
-        className='bg-transparent'
+        className='bg-transparent overflow-visible'
         variant='light'
       >
         <Badge
-          content={totalCart ?? ''}
+          content={totalCart}
+          isInvisible={totalCart === undefined}
           shape='circle'
           color='danger'
-          size='md'
+          size='sm'
         >
           <LuShoppingCart size={24} />
         </Badge>
@@ -72,7 +69,7 @@ function CartContent() {
   const { data: session } = useSession();
   const { data: cart } = useSuspenseQuery({
     queryKey: ['cart', session?.accessToken],
-    queryFn: () => fetchCart(session),
+    queryFn: () => fetchCart(session?.accessToken ?? null),
   });
   return (
     <>

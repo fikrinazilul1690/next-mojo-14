@@ -7,9 +7,13 @@ import type {
   User,
   CartItem,
   WishlistItem,
+  CheckoutItem,
+  DetailPayment,
 } from './definitions';
 import { Session } from 'next-auth';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { z } from 'zod';
+import { decrypt } from './crypto';
 
 export const baseUrl = 'https://toko-mojopahit-production.up.railway.app/v1';
 
@@ -271,6 +275,32 @@ export async function fetchCart(): Promise<CartItem[]> {
   return json.data;
 }
 
+export async function fetchTotalCart(): Promise<number | undefined> {
+  const session = await auth();
+  if (!session) {
+    return undefined;
+  }
+  const response = await fetch(`${baseUrl}/carts/total`, {
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    next: {
+      tags: ['cart'],
+    },
+    cache: 'no-cache',
+  });
+  const json = (await response.json()) as APIResponse<
+    { total: number },
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data.total;
+}
+
 export async function fetchWishlist(): Promise<WishlistItem[]> {
   const session = await auth();
   if (!session) {
@@ -293,6 +323,61 @@ export async function fetchWishlist(): Promise<WishlistItem[]> {
   >;
 
   if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data;
+}
+
+const CheckoutItemSchema = z.object({
+  sku: z.string(),
+  name: z.string(),
+  image: z.string().url(),
+  price: z.coerce.number(),
+  quantity: z.coerce.number(),
+});
+
+export async function decryptToken(
+  token?: string
+): Promise<CheckoutItem[] | undefined> {
+  const session = await auth();
+  if (!session || !token) notFound();
+  const decriptedData = decrypt(token);
+
+  try {
+    const data = CheckoutItemSchema.parse(JSON.parse(decriptedData));
+    return [data];
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
+}
+
+export async function fetchDetailPayment(
+  paymentId: string
+): Promise<DetailPayment | undefined> {
+  const session = await auth();
+  if (!session) {
+    return undefined;
+  }
+  const response = await fetch(`${baseUrl}/payments/${paymentId}`, {
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    next: {
+      tags: ['payment'],
+    },
+    cache: 'no-cache',
+  });
+  const json = (await response.json()) as APIResponse<
+    DetailPayment,
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    if (json.code === 404) {
+      return undefined;
+    }
     throw new Error(JSON.stringify(json));
   }
 

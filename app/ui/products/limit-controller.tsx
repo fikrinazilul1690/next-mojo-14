@@ -2,7 +2,7 @@
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { Autocomplete, AutocompleteItem } from '@nextui-org/autocomplete';
 import { useDebouncedCallback } from 'use-debounce';
-import { limitRange } from '@/app/lib/limit';
+import { limitRange } from '@/app/lib/client-data';
 
 export default function LimitController({ limit }: { limit: number }) {
   const { replace } = useRouter();

@@ -1,17 +1,15 @@
 import LoginForm from '@/app/ui/auth/login-form';
 
 export default function Page({
-  params,
   searchParams,
 }: {
-  params: { slug: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: { callbackUrl?: string | string[] };
 }) {
   let callbackUrl =
-    typeof searchParams['callbackUrl'] === 'string'
-      ? searchParams['callbackUrl']
-      : Array.isArray(searchParams['callbackUrl'])
-      ? searchParams['callbackUrl'].slice(-1)[0]
+    typeof searchParams.callbackUrl === 'string'
+      ? searchParams.callbackUrl
+      : Array.isArray(searchParams.callbackUrl)
+      ? searchParams.callbackUrl.slice(-1)[0]
       : '/';
 
   if (

@@ -1,5 +1,5 @@
 'use client';
-import { Key, Suspense, useCallback, useState } from 'react';
+import { Suspense, useState } from 'react';
 import {
   Navbar as NavbarUI,
   NavbarBrand,
@@ -13,10 +13,8 @@ import { Link } from '@nextui-org/link';
 import { Button } from '@nextui-org/button';
 import { LuSearch } from 'react-icons/lu';
 import { useDisclosure } from '@nextui-org/react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import SearchModal from '@/app/ui/search';
-import { logout } from '@/app/lib/actions';
-import { useUser } from '@/app/context/user-provider';
 
 const menuItems = [
   { name: 'Home', href: '/' },

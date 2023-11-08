@@ -1,6 +1,5 @@
 'use client';
-import { Key, useCallback, useState } from 'react';
-import { Avatar } from '@nextui-org/avatar';
+import { Key, useState } from 'react';
 import { Card } from '@nextui-org/card';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -23,14 +22,11 @@ export default function DropdownUser({ user }: { user: User }) {
   const handleMouseLeave = () => {
     setDropdownVisible(false);
   };
-  const onAction = useCallback(
-    (key: Key) => {
-      if (key !== 'logout') {
-        router.push(`/${key}`);
-      }
-    },
-    [router]
-  );
+  const onAction = (key: Key) => {
+    if (key !== 'logout') {
+      router.push(`/${key}`);
+    }
+  };
   return (
     <div
       className='relative p-1'

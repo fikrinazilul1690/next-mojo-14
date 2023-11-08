@@ -73,7 +73,7 @@ export type VariantSelection = {
 export type Variant = {
   sku: string;
   stock?: number;
-  variant_name: string;
+  variant_name?: string;
   price: number;
 };
 
@@ -260,9 +260,27 @@ export type DetailPayment = {
   type: string;
   bank: string;
   va_number: string;
+  order_items: OrderItems;
+  courier_company: string;
+  shipping_cost: number;
   gross_amount: number;
   expery_time: string;
   created_at: string;
+};
+
+export type OrderItems = Array<OrderItem>;
+
+export type OrderItem = {
+  product_sku: string;
+  product_name: string;
+  product_weight: {
+    value: number;
+    unit: string;
+  };
+  product_price: number;
+  customizable: boolean;
+  quantity: number;
+  total_price: number;
 };
 
 export type Bank = 'bca' | 'bni' | 'permata' | 'bri';

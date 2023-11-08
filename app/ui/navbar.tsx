@@ -37,7 +37,7 @@ const UserButton = memo(function UserButton() {
     <>
       {!!user ? (
         <>
-          <DropdownCart />
+          {user.role === 'customer' && <DropdownCart />}
           <DropdownUser user={user} />
         </>
       ) : (

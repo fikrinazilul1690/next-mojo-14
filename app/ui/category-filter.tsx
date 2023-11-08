@@ -4,7 +4,6 @@ import { RadioGroup } from '@nextui-org/react';
 import { CustomRadio } from '@/app/ui/custom-radio';
 import { Category } from '@/app/lib/definitions';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
-import { useCallback } from 'react';
 
 // Todo: integrate with rtk query and revalidate
 
@@ -24,19 +23,16 @@ export default function CategoryFilter({
   const { replace } = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const handleChange = useCallback(
-    (category: string) => {
-      const params = new URLSearchParams(searchParams);
-      params.set('page', String(1));
-      if (category) {
-        params.set('category', category);
-      } else {
-        params.delete('category');
-      }
-      replace(`${pathname}?${params.toString()}`, { scroll: false });
-    },
-    [pathname, replace, searchParams]
-  );
+  const handleChange = (category: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(1));
+    if (category) {
+      params.set('category', category);
+    } else {
+      params.delete('category');
+    }
+    replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
   return (
     <RadioGroup
       className={`gap-1 justify-center ${className}`}

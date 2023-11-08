@@ -18,6 +18,7 @@ export default async function Page({
   };
 }) {
   const productId = Number(params.productId);
+  if (!productId) notFound();
   const product = await fetchProductDetail(productId);
   if (!product) notFound();
   const variant =
