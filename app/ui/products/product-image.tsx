@@ -1,5 +1,5 @@
 'use client';
-import { Key, useReducer, useState } from 'react';
+import { useReducer, useState } from 'react';
 import { Card, CardBody, CardFooter, CardHeader } from '@nextui-org/card';
 import { Tabs, Tab } from '@nextui-org/tabs';
 import Image from 'next/image';
@@ -38,7 +38,7 @@ export default function ProductImages({ product: { images, model } }: Props) {
     (image) => image.order === 0
   )[0];
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [selected, setSelected] = useState<Key>('gambar');
+  const [selected, setSelected] = useState('gambar');
   const Model = dynamic(() => import('./product-model'), { ssr: false });
 
   return (
@@ -50,7 +50,7 @@ export default function ProductImages({ product: { images, model } }: Props) {
       <CardHeader className='p-0'>
         <Tabs
           selectedKey={selected}
-          onSelectionChange={setSelected}
+          onSelectionChange={(key) => setSelected(key.toString())}
           variant='solid'
           size='lg'
           fullWidth

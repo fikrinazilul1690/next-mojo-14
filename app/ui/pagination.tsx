@@ -3,14 +3,14 @@ import { Pagination as PaginationComponent } from '@nextui-org/pagination';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 type Props = {
-  totalPage: number;
+  totalPages: number;
   size?: 'sm' | 'md' | 'lg';
   showControls?: boolean;
   variant?: 'flat' | 'bordered' | 'faded' | 'light';
 };
 
 export default function Pagination({
-  totalPage,
+  totalPages,
   showControls = false,
   size = 'md',
   variant = 'flat',
@@ -30,7 +30,7 @@ export default function Pagination({
       variant={variant}
       showControls={showControls}
       page={Number(searchParams.get('page')) ?? 1}
-      total={totalPage}
+      total={totalPages}
       onChange={handlePage}
     />
   );

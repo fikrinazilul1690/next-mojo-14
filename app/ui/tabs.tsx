@@ -10,20 +10,16 @@ type Props = {
 
 export default function NavTabs({ variant, size }: Props) {
   const pathname = usePathname();
-  const router = useRouter();
   return (
     <Tabs
       variant={variant}
       selectedKey={pathname.replace('/', '')}
       size={size}
       aria-label='Tabs variants'
-      onSelectionChange={(key) => {
-        router.push(`/${String(key)}`);
-      }}
       className='mt-7'
     >
-      <Tab key='cart' title='Cart' />
-      <Tab key='wishlist' title='Wishlist' />
+      <Tab key='cart' title='Cart' href='/cart' />
+      <Tab key='wishlist' title='Wishlist' href='/wishlist' />
     </Tabs>
   );
 }

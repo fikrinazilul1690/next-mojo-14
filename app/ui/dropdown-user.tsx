@@ -1,5 +1,5 @@
 'use client';
-import { Key, useState } from 'react';
+import { useState } from 'react';
 import { Card } from '@nextui-org/card';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -11,9 +11,9 @@ import { MdDashboardCustomize } from 'react-icons/md';
 import { Listbox, ListboxItem } from '@nextui-org/listbox';
 import { useRouter } from 'next/navigation';
 import { logout } from '@/app/lib/actions';
+import { LogoutButton } from './logout-button';
 
 export default function DropdownUser({ user }: { user: User }) {
-  const router = useRouter();
   const [isDropdownVisible, setDropdownVisible] = useState(false);
   const handleMouseEnter = () => {
     setDropdownVisible(true);
@@ -22,34 +22,26 @@ export default function DropdownUser({ user }: { user: User }) {
   const handleMouseLeave = () => {
     setDropdownVisible(false);
   };
-  const onAction = (key: Key) => {
-    if (key !== 'logout') {
-      router.push(`/${key}`);
-    }
-  };
   return (
     <div
-      className='relative p-1'
+      className='relative p-2'
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <Link
         href='/settings'
-        className='rounded-full block border-4 border-slate-300'
+        className='flex relative w-[34px] h-[34px] justify-center items-center box-border overflow-hidden align-middle z-0 outline-none rounded-full ring-2 ring-offset-2 ring-offset-background ring-default transition-transform'
       >
         <Image
-          src={
-            user.profile_picture?.url ||
-            `https://robohash.org/${user.name}?set=set1&size=34x34`
-          }
+          src={user.profile_picture?.url || '/default-user.jpg'}
           alt={user.name!}
-          className='rounded-full'
-          width={34}
-          height={34}
+          className='rounded-full object-cover'
+          fill
         />
       </Link>
       {isDropdownVisible && (
         <Card
+          as='form'
           radius='sm'
           className='absolute top-[50px] sm:-left-14 -left-24 z-10'
         >
@@ -59,7 +51,6 @@ export default function DropdownUser({ user }: { user: User }) {
                 className='w-40'
                 variant='light'
                 aria-label='Listbox menu with icons'
-                onAction={onAction}
               >
                 <ListboxItem
                   key='info'
@@ -72,15 +63,17 @@ export default function DropdownUser({ user }: { user: User }) {
                   <p className='font-semibold'>{user.name}</p>
                 </ListboxItem>
                 <ListboxItem
-                  key='setting'
-                  textValue='Setting'
+                  key='settings'
+                  textValue='Settings'
                   startContent={<LuSettings size={24} />}
+                  href='/settings'
                 >
                   Settings
                 </ListboxItem>
                 <ListboxItem
                   key='wishlist'
                   textValue='Wishlist'
+                  href='/wishlist'
                   startContent={<LuHeart size={24} />}
                 >
                   Wishlist
@@ -88,21 +81,19 @@ export default function DropdownUser({ user }: { user: User }) {
                 <ListboxItem
                   key='my-orders'
                   textValue='My Orders'
+                  href='/orders'
                   startContent={<LiaShippingFastSolid size={24} />}
                 >
                   My Orders
                 </ListboxItem>
-                <ListboxItem
-                  key='logout'
-                  color='danger'
-                  className='text-danger'
-                  textValue='Logout'
-                  startContent={<LuLogOut size={24} />}
-                  onPress={async () => {
-                    await logout();
-                  }}
-                >
-                  Logout
+                <ListboxItem key='logout' textValue='Logout'>
+                  <LogoutButton
+                    startContent={<LuLogOut size={24} />}
+                    formAction={async () => {
+                      localStorage.clear();
+                      await logout();
+                    }}
+                  />
                 </ListboxItem>
               </Listbox>
             )}
@@ -111,7 +102,6 @@ export default function DropdownUser({ user }: { user: User }) {
                 className='w-40'
                 variant='light'
                 aria-label='Listbox menu with icons'
-                onAction={onAction}
               >
                 <ListboxItem
                   key='info'
@@ -127,20 +117,18 @@ export default function DropdownUser({ user }: { user: User }) {
                   key='dashboard'
                   textValue='Dashboard'
                   startContent={<MdDashboardCustomize size={24} />}
+                  href='/dashboard'
                 >
                   Dashboard
                 </ListboxItem>
-                <ListboxItem
-                  key='logout'
-                  color='danger'
-                  className='text-danger'
-                  textValue='Logout'
-                  startContent={<LuLogOut size={24} />}
-                  onPress={async () => {
-                    await logout();
-                  }}
-                >
-                  Logout
+                <ListboxItem key='logout' textValue='Logout'>
+                  <LogoutButton
+                    formAction={async () => {
+                      localStorage.clear();
+                      await logout();
+                    }}
+                    startContent={<LuLogOut size={24} />}
+                  />
                 </ListboxItem>
               </Listbox>
             )}

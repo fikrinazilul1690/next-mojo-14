@@ -14,7 +14,7 @@ type State = {
 type Action = {
   reset: () => void;
   setAddressId: (addressId: number) => void;
-  setCourier: (courierService: Pricing | null) => void;
+  setCourier: (courierService: string | null) => void;
   setShippingCost: (shippingCost: number) => void;
   setBank: (bank: string) => void;
   resetCourier: () => void;
@@ -35,21 +35,17 @@ export const createStore = () =>
         ...initialState,
         reset: () =>
           set({
-            addressId: null,
-            courierService: null,
-            bank: null,
+            ...initialState,
           }),
         setAddressId: (addressId) => {
           set(() => ({
             addressId,
           }));
-          get().resetCourier();
+          // get().resetCourier();
         },
-        setCourier: (pricing) => {
-          const courierService = `${pricing?.courier_code}_${pricing?.courier_service_code}`;
+        setCourier: (courierService) => {
           set(() => ({
             courierService,
-            shippingCost: pricing?.price,
           }));
         },
         setBank: (bank) =>
@@ -65,6 +61,12 @@ export const createStore = () =>
       }),
       {
         name: 'shipping',
+        partialize: (state) =>
+          Object.fromEntries(
+            Object.entries(state).filter(
+              ([key]) => !['shippingCost'].includes(key)
+            )
+          ),
       }
     )
   );

@@ -15,6 +15,17 @@ import { WishlistItem } from '@/app/lib/definitions';
 import { Button } from '@nextui-org/button';
 import { Divider } from '@nextui-org/divider';
 import { TbShoppingCartPlus } from 'react-icons/tb';
+import { useTotalCart } from '@/app/context/cart-provider';
+import {
+  CartActionState,
+  WishlistActionState,
+  addToCartFromWishlist,
+  deleteWishlist,
+} from '@/app/lib/actions';
+import { useEffect, useOptimistic } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useFormState } from 'react-dom';
+import toast from 'react-hot-toast';
 
 type Props = {
   wishlist: WishlistItem[];
@@ -35,7 +46,49 @@ const columns = [
   },
 ];
 
-export default function WishlistTable({ wishlist }: Props) {
+export default function WishlistTable({ wishlist: wishlistIntial }: Props) {
+  const queryClient = useQueryClient();
+  const [totalCart, updateTotalCart] = useTotalCart();
+  const [wishlistOptimistic, updateWishlistOptimistic] =
+    useOptimistic(wishlistIntial);
+  const initialState: CartActionState = { status: 'iddle', message: null };
+  const [cartState, formActionAddToCart] = useFormState(
+    async (prevState: CartActionState, formData: FormData) => {
+      updateTotalCart((pendingState) => {
+        if (!!pendingState) {
+          return pendingState + Number(formData.get('quantity'));
+        }
+      });
+      const data = await addToCartFromWishlist(prevState, formData);
+      await queryClient.invalidateQueries({ queryKey: ['cart'] });
+      return data;
+    },
+    initialState
+  );
+
+  const [wishlistState, formActionDeleteWishlist] = useFormState(
+    async (prevState: WishlistActionState, formData: FormData) => {
+      updateWishlistOptimistic((pendingState) =>
+        pendingState.filter((state) => state.sku !== formData.get('sku'))
+      );
+      return await deleteWishlist(prevState, formData);
+    },
+    initialState satisfies WishlistActionState
+  );
+
+  useEffect(() => {
+    if (cartState.message) {
+      if (cartState.status === 'error') {
+        toast.error(cartState.message);
+        return;
+      }
+      if (cartState.status === 'success') {
+        toast.success(cartState.message);
+        return;
+      }
+    }
+  }, [cartState]);
+
   return (
     <Table
       removeWrapper
@@ -64,7 +117,7 @@ export default function WishlistTable({ wishlist }: Props) {
       <TableBody
         emptyContent={<CustomerEmptyTable title='Your Wishlist Is Empty' />}
       >
-        {wishlist.map((item) => (
+        {wishlistOptimistic.map((item) => (
           <TableRow key={item.sku}>
             <TableCell>
               <div className='flex gap-2 items-center'>
@@ -83,7 +136,7 @@ export default function WishlistTable({ wishlist }: Props) {
               </div>
             </TableCell>
             <TableCell>
-              {formatIDR(item.price, { maximumSignificantDigits: 3 })}
+              {formatIDR(item.price).replace(/(\.|,)00$/g, '')}
             </TableCell>
             <TableCell>
               <div className='flex gap-3 h-5 justify-center items-center text-small'>
@@ -91,11 +144,25 @@ export default function WishlistTable({ wishlist }: Props) {
                   variant='solid'
                   color='primary'
                   startContent={<TbShoppingCartPlus size={24} />}
+                  onPress={() => {
+                    const formData = new FormData();
+                    formData.append('sku', item.sku);
+                    formData.append('quantity', String(1));
+                    formActionAddToCart(formData);
+                  }}
                 >
                   Add To Cart
                 </Button>
                 <Divider orientation='vertical' className='bg-black h-full' />
-                <DeleteButton variant='bin' ariaLabel='delete from wishlist' />
+                <DeleteButton
+                  onClick={() => {
+                    const formData = new FormData();
+                    formData.append('sku', item.sku);
+                    formActionDeleteWishlist(formData);
+                  }}
+                  variant='bin'
+                  ariaLabel='delete from wishlist'
+                />
               </div>
             </TableCell>
           </TableRow>

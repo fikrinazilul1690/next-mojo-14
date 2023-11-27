@@ -6,6 +6,7 @@ import { formatIDR } from '@/app/lib/utils';
 import { Select, SelectItem } from '@nextui-org/select';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
+import { useEffect, useMemo } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 
 type Props = {
@@ -17,6 +18,8 @@ export default function CourierSelect({ items }: Props) {
   const addressId = shipping((state) => state.addressId);
   const courierService = shipping((state) => state.courierService);
   const setCourier = shipping((state) => state.setCourier);
+  const resetCourier = shipping((state) => state.resetCourier);
+  const setShippingCost = shipping((state) => state.setShippingCost);
   const { data: session } = useSession();
   const {
     data: pricing,
@@ -33,6 +36,30 @@ export default function CourierSelect({ items }: Props) {
     enabled: !!session?.accessToken && !!addressId,
   });
 
+  const selectedCourier = useMemo(() => {
+    const key = courierService?.split('_');
+    if (key?.length === 2) {
+      return pricing?.find(
+        (data) =>
+          data.courier_code === key[0] && data.courier_service_code === key[1]
+      );
+    }
+  }, [pricing, courierService]);
+
+  useEffect(() => {
+    if (!!addressId && selectedCourier?.price !== undefined) {
+      setShippingCost(selectedCourier.price);
+    } else if (!courierService || courierService?.split('_').length !== 2) {
+      resetCourier();
+    }
+  }, [
+    setShippingCost,
+    resetCourier,
+    addressId,
+    selectedCourier,
+    courierService,
+  ]);
+
   return (
     <Select
       isLoading={isLoading}
@@ -47,8 +74,18 @@ export default function CourierSelect({ items }: Props) {
       }}
       selectionMode='single'
       selectedKeys={
-        isSuccess && courierService ? new Set([courierService]) : new Set()
+        isSuccess && selectedCourier
+          ? new Set([
+              `${selectedCourier.courier_code}_${selectedCourier.courier_service_code}`,
+            ])
+          : new Set()
       }
+      onChange={(e) => {
+        const value = e.target.value;
+        if (value) {
+          setCourier(value);
+        }
+      }}
       selectorIcon={<IoIosArrowForward />}
       renderValue={(items) => {
         return items.map((item) => (
@@ -62,9 +99,7 @@ export default function CourierSelect({ items }: Props) {
             </div>
             <div className='flex gap-2 items-center overflow-hidden'>
               <span className='font-bold text-sm'>
-                {formatIDR(item.data?.price ?? 0, {
-                  maximumSignificantDigits: 3,
-                })}
+                {formatIDR(item.data?.price ?? 0).replace(/(\.|,)00$/g, '')}
               </span>
               <span className='text-default-500 text-tiny'>
                 ({item.data?.duration})
@@ -78,7 +113,6 @@ export default function CourierSelect({ items }: Props) {
         <SelectItem
           key={`${data.courier_code}_${data.courier_service_code}`}
           textValue={`${data.courier_code}_${data.courier_service_code}`}
-          onPress={() => setCourier(data)}
         >
           <div className='flex flex-col gap-0 p-1'>
             <div className='flex gap-1 items-center overflow-hidden'>
@@ -88,7 +122,7 @@ export default function CourierSelect({ items }: Props) {
             </div>
             <div className='flex gap-2 items-center overflow-hidden'>
               <span className='font-bold text-sm'>
-                {formatIDR(data.price, { maximumSignificantDigits: 3 })}
+                {formatIDR(data.price).replace(/(\.|,)00$/g, '')}
               </span>
               <span className='text-default-500 text-tiny'>
                 ({data.duration})

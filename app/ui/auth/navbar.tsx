@@ -14,7 +14,7 @@ import { Button } from '@nextui-org/button';
 import { LuSearch } from 'react-icons/lu';
 import { useDisclosure } from '@nextui-org/react';
 import { usePathname } from 'next/navigation';
-import SearchModal from '@/app/ui/search';
+import { ProductSearchModal } from '@/app/ui/search';
 
 const menuItems = [
   { name: 'Home', href: '/' },
@@ -144,7 +144,7 @@ export default function Navbar() {
         </NavbarMenu>
       </NavbarUI>
       <Suspense>
-        <SearchModal isOpen={isOpen} onOpenChange={onOpenChange} />
+        <ProductSearchModal isOpen={isOpen} onOpenChange={onOpenChange} />
       </Suspense>
     </>
   );

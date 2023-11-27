@@ -3,8 +3,11 @@ import {
   APIResponse,
   Bank,
   CartItem,
+  Category,
+  DetailPayment,
   Item,
   ListAddresses,
+  ListLocation,
   Pricing,
   RateResponse,
 } from './definitions';
@@ -32,7 +35,7 @@ export async function fetchCart(
   return json.data;
 }
 
-export async function fetchAddresses(
+export async function fetchListAddress(
   accessToken: string | null
 ): Promise<ListAddresses | undefined> {
   if (!accessToken) {
@@ -131,4 +134,67 @@ export async function fetchCourierPricing(
   }
 
   return json.data.pricing;
+}
+
+export async function fetchDetailPayment(
+  accessToken: string | null,
+  paymentId: string
+): Promise<DetailPayment> {
+  const response = await fetch(`${baseUrl}/payments/${paymentId}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  const json = (await response.json()) as APIResponse<
+    DetailPayment,
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data;
+}
+
+export async function fetchCategoreis(): Promise<Category[]> {
+  const response = await fetch(`${baseUrl}/categories`, {
+    method: 'GET',
+  });
+
+  const json = (await response.json()) as APIResponse<
+    Category[],
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data;
+}
+
+export async function fetchLocations(
+  search: string
+): Promise<ListLocation | undefined> {
+  const response = await fetch(
+    `${baseUrl}/locations?` +
+      new URLSearchParams({
+        search,
+      }),
+    {
+      method: 'GET',
+    }
+  );
+
+  const json = (await response.json()) as APIResponse<
+    ListLocation,
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data;
 }

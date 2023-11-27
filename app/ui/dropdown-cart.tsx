@@ -43,7 +43,7 @@ export default function DropdownCart() {
           isInvisible={totalCart === undefined}
           shape='circle'
           color='danger'
-          size='sm'
+          size='lg'
         >
           <LuShoppingCart size={24} />
         </Badge>
@@ -85,7 +85,7 @@ function CartContent() {
           variant='flat'
         >
           {(item) => (
-            <ListboxItem key={item.sku} textValue={item.name}>
+            <ListboxItem key={item.sku} href='/cart' textValue={item.name}>
               <div className='flex gap-2 items-center'>
                 <Image
                   src={item.image.url}

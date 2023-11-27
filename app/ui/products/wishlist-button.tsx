@@ -4,6 +4,7 @@ import { Button } from '@nextui-org/button';
 import { AiOutlineHeart } from 'react-icons/ai';
 import { toogleWishlist } from '@/app/lib/actions';
 import { useOptimistic } from 'react';
+import { SubmitButton } from '../submit-button';
 
 type Props = {
   isExist: boolean | undefined;
@@ -31,14 +32,13 @@ export default function WishlistButton({ sku, productId, isExist }: Props) {
         await handleToogle(sku);
       }}
     >
-      <Button
-        type='submit'
+      <SubmitButton
         color='danger'
         variant={optimisticIsExist ? 'solid' : 'bordered'}
         isIconOnly
       >
         <AiOutlineHeart size={24} />
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

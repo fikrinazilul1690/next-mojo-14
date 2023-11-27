@@ -15,23 +15,7 @@ type UserRequest = {
 };
 
 const useUserState = (initalUser: User | null) =>
-  useOptimistic<User | null, UserRequest>(
-    initalUser,
-    (state: User | null, req: UserRequest) => {
-      if (!state) {
-        return null;
-      }
-
-      return {
-        ...state,
-        name: req?.name ?? state.name,
-        phone: req?.phone ?? state.phone,
-        gender: req?.gender ?? state.gender,
-        birthdate: req?.birthdate ?? state.birthdate,
-        profile_picture: req.profile_picture ?? state.profile_picture,
-      };
-    }
-  );
+  useOptimistic<User | null>(initalUser);
 
 export const UserContext = createContext<ReturnType<
   typeof useUserState

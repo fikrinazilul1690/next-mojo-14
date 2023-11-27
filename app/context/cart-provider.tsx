@@ -1,18 +1,11 @@
 'use client';
 import React, { createContext, useOptimistic } from 'react';
 
-const useUserState = (initalTotalCart?: number) =>
-  useOptimistic<number | undefined, number>(
-    initalTotalCart,
-    (state, action) => {
-      if (state !== undefined) {
-        return state + action;
-      }
-    }
-  );
+const useCartTotalState = (initalTotalCart?: number) =>
+  useOptimistic<number | undefined>(initalTotalCart);
 
 export const CartContext = createContext<ReturnType<
-  typeof useUserState
+  typeof useCartTotalState
 > | null>(null);
 
 export const useTotalCart = () => {
@@ -30,7 +23,7 @@ const CartProvider = ({
   totalCart?: number;
   children: React.ReactNode;
 }) => {
-  const [totalCart, updateTotalCart] = useUserState(initialTotalCart);
+  const [totalCart, updateTotalCart] = useCartTotalState(initialTotalCart);
 
   return (
     <CartContext.Provider value={[totalCart, updateTotalCart]}>

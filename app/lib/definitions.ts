@@ -27,7 +27,7 @@ export type UploadResponse = {
   file_name: string;
   image_url: string;
   content_type: string;
-  uploaded_at: Date;
+  uploaded_at: string;
 };
 
 export type LoginResponse = {
@@ -37,6 +37,14 @@ export type LoginResponse = {
   refresh_token: string;
   refresh_token_expires_at: string;
   user: User;
+};
+
+export type UpdateProfileError = {
+  message?: string;
+  name?: string[];
+  phone?: string[];
+  gender?: string[];
+  birthdate?: string[];
 };
 
 export type User = {
@@ -54,6 +62,20 @@ export type User = {
   gender?: string;
   created_at: string;
   password_changed_at?: string;
+};
+
+export type Admin = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  phone: string;
+  profile_picture?: {
+    name: string;
+    url: string;
+    uploaded_at: string;
+  } | null;
+  created_at: string;
 };
 
 export type UploadImageRequest = {
@@ -119,6 +141,27 @@ export type RegisterError = {
   phone?: string[];
   password?: string[];
   confirm_password?: string[];
+};
+
+export type ChangePasswordError = {
+  message?: string;
+  password?: string[];
+  confirm_password?: string[];
+};
+
+export type CreateAddressError = {
+  message?: string;
+  contact_name?: string[];
+  contact_phone?: string[];
+  full_address?: string[];
+  area_id?: string[];
+  province?: string[];
+  city?: string[];
+  district?: string[];
+  postal_code?: string[];
+  note?: string[];
+  is_primary?: string[];
+  location?: string[];
 };
 
 export type SelectionProduct = {
@@ -216,6 +259,17 @@ export type PricingRatePayload = {
   items: Array<Item>;
 };
 
+export type Location = {
+  area_id: string;
+  name: string;
+  province: string;
+  city: string;
+  district: string;
+  postal_code: string;
+};
+
+export type ListLocation = Array<Location>;
+
 export type Pricing = {
   company: string;
   courier_name: string;
@@ -264,7 +318,7 @@ export type DetailPayment = {
   courier_company: string;
   shipping_cost: number;
   gross_amount: number;
-  expery_time: string;
+  expiry_time: string;
   created_at: string;
 };
 
@@ -281,6 +335,58 @@ export type OrderItem = {
   customizable: boolean;
   quantity: number;
   total_price: number;
+};
+
+export type OrderInfo = {
+  id: string;
+  buyyer: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  status: string;
+  destination: {
+    address: string;
+    province: string;
+    city: string;
+    district: string;
+    postal_code: string;
+  };
+  courier: {
+    company_name: string;
+    service_type: string;
+    tracking_id: string;
+  };
+  order_items: {
+    name: string;
+    price: number;
+    image: string;
+    weight: {
+      value: number;
+      unit: string;
+    };
+    customizable: boolean;
+    quantity: number;
+    total_price: number;
+    item_status_history: History[];
+  }[];
+  total_quantity: number;
+  total_weight: {
+    value: number;
+    unit: string;
+  };
+  total_product_price: number;
+  shipping_cost: number;
+  total_cost: number;
+  order_history?: History[];
+  created_at: string;
+  updated_at: null | string;
+};
+
+export type History = {
+  status: string;
+  note: string;
+  updated_at: string;
 };
 
 export type Bank = 'bca' | 'bni' | 'permata' | 'bri';

@@ -9,6 +9,10 @@ import type {
   WishlistItem,
   CheckoutItem,
   DetailPayment,
+  Admin,
+  ListAddresses,
+  CustomerAddress,
+  OrderInfo,
 } from './definitions';
 import { Session } from 'next-auth';
 import { notFound, redirect } from 'next/navigation';
@@ -100,7 +104,7 @@ export async function fetchProductsPage(props?: {
   featured?: boolean;
   available?: boolean;
 }): Promise<
-  APIResponse<{ page: number; total_product: number }, { message: string }>
+  APIResponse<{ page: number; total_products: number }, { message: string }>
 > {
   const response = await fetch(
     `${baseUrl}/products/count?` +
@@ -120,7 +124,7 @@ export async function fetchProductsPage(props?: {
     }
   );
   const json = (await response.json()) as APIResponse<
-    { page: number; total_product: number },
+    { page: number; total_products: number },
     { message: string }
   >;
   if (!response.ok) {
@@ -195,7 +199,7 @@ export async function fetchProductDetail(
     `https://toko-mojopahit-production.up.railway.app/v1/products/${id}`,
     {
       next: {
-        tags: ['product'],
+        tags: ['product', 'payment'],
       },
       cache: 'no-cache',
     }
@@ -259,7 +263,7 @@ export async function fetchCart(): Promise<CartItem[]> {
       Authorization: `Bearer ${session?.accessToken}`,
     },
     next: {
-      tags: ['cart'],
+      tags: ['cart', 'payment-cart'],
     },
     cache: 'no-cache',
   });
@@ -275,6 +279,43 @@ export async function fetchCart(): Promise<CartItem[]> {
   return json.data;
 }
 
+export async function fetchCartForCheckout(): Promise<CheckoutItem[]> {
+  const session = await auth();
+  if (!session) {
+    const searchParams = new URLSearchParams();
+    searchParams.set('callbackUrl', '/cart');
+    redirect(`/login?${searchParams}`);
+  }
+  const response = await fetch(`${baseUrl}/carts`, {
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    next: {
+      tags: ['cart', 'payment-cart'],
+    },
+    cache: 'no-cache',
+  });
+  const json = (await response.json()) as APIResponse<
+    CartItem[],
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  const checkoutItems = json.data
+    .filter((cartItem) => cartItem.available)
+    .map<CheckoutItem>((cartItem) => ({
+      sku: cartItem.sku,
+      name: cartItem.name,
+      image: cartItem.image.url,
+      price: cartItem.price,
+      quantity: cartItem.quantity,
+    }));
+  return checkoutItems;
+}
+
 export async function fetchTotalCart(): Promise<number | undefined> {
   const session = await auth();
   if (!session) {
@@ -285,7 +326,7 @@ export async function fetchTotalCart(): Promise<number | undefined> {
       Authorization: `Bearer ${session?.accessToken}`,
     },
     next: {
-      tags: ['cart'],
+      tags: ['cart', 'payment-cart'],
     },
     cache: 'no-cache',
   });
@@ -313,7 +354,7 @@ export async function fetchWishlist(): Promise<WishlistItem[]> {
       Authorization: `Bearer ${session?.accessToken}`,
     },
     next: {
-      tags: ['cart'],
+      tags: ['cart', 'payment-cart'],
     },
     cache: 'no-cache',
   });
@@ -365,7 +406,7 @@ export async function fetchDetailPayment(
       Authorization: `Bearer ${session?.accessToken}`,
     },
     next: {
-      tags: ['payment'],
+      tags: ['payment', 'payment-cart'],
     },
     cache: 'no-cache',
   });
@@ -378,6 +419,340 @@ export async function fetchDetailPayment(
     if (json.code === 404) {
       return undefined;
     }
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data;
+}
+
+export async function fetchAdminList(props?: {
+  limit?: number;
+  offset?: number;
+}): Promise<Admin[] | undefined> {
+  const session = await auth();
+  if (!session) {
+    return undefined;
+  }
+  const response = await fetch(
+    `${baseUrl}/admin?` +
+      new URLSearchParams({
+        ...Object.fromEntries(
+          Object.entries(props ?? {})
+            .filter(([_key, value]) => value !== undefined)
+            .map(([key, value]) => [key, String(value)])
+        ),
+      }),
+    {
+      headers: {
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+      next: {
+        tags: ['admin'],
+      },
+      cache: 'no-cache',
+    }
+  );
+  const json = (await response.json()) as APIResponse<
+    Admin[],
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data;
+}
+
+export async function fetchAdminsPage(props?: {
+  limit?: number;
+  offset?: number;
+}): Promise<
+  APIResponse<{ page: number; total_admins: number }, { message: string }>
+> {
+  const session = await auth();
+  const response = await fetch(
+    `${baseUrl}/admin/count?` +
+      new URLSearchParams({
+        ...Object.fromEntries(
+          Object.entries(props ?? {})
+            .filter(([_key, value]) => value !== undefined)
+            .map(([key, value]) => [key, String(value)])
+        ),
+      }),
+    {
+      headers: {
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+      method: 'GET',
+      next: {
+        tags: ['admin'],
+      },
+      cache: 'force-cache',
+    }
+  );
+  const json = (await response.json()) as APIResponse<
+    { page: number; total_admins: number },
+    { message: string }
+  >;
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+  return json;
+}
+
+export const colorData = [
+  {
+    name: 'Black',
+    hex: '#000000',
+  },
+  {
+    name: 'Blue',
+    hex: '#0000FF',
+  },
+  {
+    name: 'Brown',
+    hex: '#A52A2A',
+  },
+  {
+    name: 'Burgundy',
+    hex: '#800020',
+  },
+  {
+    name: 'Chocolate',
+    hex: '#D2691E',
+  },
+  {
+    name: 'Cyan',
+    hex: '#00FFFF',
+  },
+  {
+    name: 'Gold',
+    hex: '#FFD700',
+  },
+  {
+    name: 'Gray',
+    hex: '#808080',
+  },
+  {
+    name: 'Green',
+    hex: '#008000',
+  },
+  {
+    name: 'Lavender',
+    hex: '#E6E6FA',
+  },
+  {
+    name: 'Lime',
+    hex: '#00FF00',
+  },
+  {
+    name: 'Magenta',
+    hex: '#FF00FF',
+  },
+  {
+    name: 'Maroon',
+    hex: '#800000',
+  },
+  {
+    name: 'Navy',
+    hex: '#000080',
+  },
+  {
+    name: 'Orange',
+    hex: '#FF7F00',
+  },
+  {
+    name: 'Peach',
+    hex: '#FFE5B4',
+  },
+  {
+    name: 'Pink',
+    hex: '#FFC0CB',
+  },
+  {
+    name: 'Purple',
+    hex: '#800080',
+  },
+  {
+    name: 'Red',
+    hex: '#FF0000',
+  },
+  {
+    name: 'Rose',
+    hex: '#FF007F',
+  },
+  {
+    name: 'Tangerine',
+    hex: '#F28500',
+  },
+  {
+    name: 'Teal',
+    hex: '#008080',
+  },
+  {
+    name: 'Turquoise',
+    hex: '#40E0D0',
+  },
+  {
+    name: 'Vanilla',
+    hex: '#F3E5AB',
+  },
+  {
+    name: 'Violet',
+    hex: '#8F00FF',
+  },
+  {
+    name: 'White',
+    hex: '#FFFFFF',
+  },
+  {
+    name: 'Yellow',
+    hex: '#FFFF00',
+  },
+];
+
+export default async function fetchListAddress(): Promise<ListAddresses> {
+  const session = await auth();
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  const response = await fetch(`${baseUrl}/users/addresses`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    next: {
+      tags: ['address'],
+    },
+    cache: 'force-cache',
+  });
+
+  const json = (await response.json()) as APIResponse<
+    ListAddresses,
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data;
+}
+
+export async function fetchDetailAddress(
+  addressId: string
+): Promise<CustomerAddress | undefined> {
+  const session = await auth();
+  if (!session) {
+    return undefined;
+  }
+  const response = await fetch(`${baseUrl}/users/addresses/${addressId}`, {
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    next: {
+      tags: ['payment', 'payment-cart'],
+    },
+    cache: 'no-cache',
+  });
+  const json = (await response.json()) as APIResponse<
+    CustomerAddress,
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    if (json.code === 404) {
+      return undefined;
+    }
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data;
+}
+
+export async function fetchListPendingPayment(): Promise<Array<DetailPayment>> {
+  const session = await auth();
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  const response = await fetch(`${baseUrl}/payments`, {
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    next: {
+      tags: ['payment', 'payment-cart'],
+    },
+    cache: 'no-cache',
+  });
+  const json = (await response.json()) as APIResponse<
+    Array<DetailPayment>,
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data;
+}
+
+export async function fetchListOrder(props?: {
+  limit?: number;
+  offset?: number;
+  status?: string;
+}): Promise<OrderInfo[]> {
+  const session = await auth();
+  if (!session) {
+    redirect('/login?' + new URLSearchParams({ callbackUrl: '/orders' }));
+  }
+  const response = await fetch(
+    `${baseUrl}/orders?` +
+      new URLSearchParams({
+        ...Object.fromEntries(
+          Object.entries(props ?? {})
+            .filter(([_key, value]) => value !== undefined)
+            .map(([key, value]) => [key, String(value)])
+        ),
+      }),
+    {
+      headers: {
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+      next: {
+        tags: ['order'],
+      },
+      cache: 'no-cache',
+    }
+  );
+  const json = (await response.json()) as APIResponse<
+    OrderInfo[],
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data;
+}
+
+export async function fetchOrderDetails(orderId: string): Promise<OrderInfo> {
+  const session = await auth();
+  if (!session) {
+    redirect('/login?' + new URLSearchParams({ callbackUrl: '/orders' }));
+  }
+  const response = await fetch(`${baseUrl}/orders/${orderId}`, {
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    next: {
+      tags: ['order'],
+    },
+    cache: 'no-cache',
+  });
+  const json = (await response.json()) as APIResponse<
+    OrderInfo,
+    { message: string }
+  >;
+
+  if (!response.ok) {
     throw new Error(JSON.stringify(json));
   }
 

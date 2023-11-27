@@ -3,15 +3,45 @@ import { Input } from '@nextui-org/input';
 import { LuSearch } from 'react-icons/lu';
 import { Modal, ModalContent, ModalBody } from '@nextui-org/modal';
 import { Kbd } from '@nextui-org/react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';
+import { BsSearch } from 'react-icons/bs';
 
 type Props = {
   isOpen: boolean;
   onOpenChange: () => void;
 };
 
-export default function SearchModal({ isOpen, onOpenChange }: Props) {
+export default function Search({ placeholder }: { placeholder: string }) {
+  const { replace } = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const handleSearch = useDebouncedCallback((term) => {
+    console.log(`Searching... ${term}`);
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(1));
+    if (term) {
+      params.set('search', term);
+    } else {
+      params.delete('search');
+    }
+    replace(`${pathname}?${params.toString()}`);
+  }, 300);
+  return (
+    <Input
+      fullWidth
+      placeholder={placeholder}
+      type='search'
+      onValueChange={handleSearch}
+      radius='md'
+      size='sm'
+      defaultValue={searchParams.get('search')?.toString()}
+      startContent={<BsSearch size={16} />}
+    />
+  );
+}
+
+export function ProductSearchModal({ isOpen, onOpenChange }: Props) {
   const { replace } = useRouter();
   const searchParams = useSearchParams();
   const handleSearch = useDebouncedCallback((term) => {
@@ -39,7 +69,6 @@ export default function SearchModal({ isOpen, onOpenChange }: Props) {
             <ModalBody className='p-0 flex-row bg-default-200/50 gap-0 items-center'>
               <Input
                 autoFocus
-                isClearable
                 label='Search'
                 radius='lg'
                 classNames={{

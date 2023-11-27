@@ -32,7 +32,7 @@ export function ItemCard({ item }: { item: CheckoutItem }) {
           </div>
         </div>
         <p className='font-semibold ml-auto'>
-          {formatIDR(item.price, { maximumSignificantDigits: 3 })}
+          {formatIDR(item.price).replace(/(\.|,)00$/g, '')}
         </p>
       </div>
     </Card>
@@ -49,14 +49,14 @@ export default function ListItems({
   const subTotal = countSubTotal(items);
   return (
     <div className={`flex flex-col gap-4 ${className}`}>
-      <div className='flex gap-2 w-full'>
+      <div className='flex flex-col gap-2 w-full'>
         {items.map((item) => (
           <ItemCard key={item.sku} item={item} />
         ))}
       </div>
       <div className='font-bold text-lg flex justify-between items-center'>
         <span>Sub Total</span>
-        <span>{formatIDR(subTotal, { maximumSignificantDigits: 3 })}</span>
+        <span>{formatIDR(subTotal).replace(/(\.|,)00$/g, '')}</span>
       </div>
     </div>
   );

@@ -41,7 +41,7 @@ export default async function Page({
           <CategoryFilter
             category={category}
             defaultValue=''
-            defaultValueLabel='All'
+            defaultValueLabel='all'
             categories={categories}
             className='max-sm:w-40'
           />
@@ -59,7 +59,7 @@ export default async function Page({
           </Suspense>
           <Pagination
             showControls
-            totalPage={data.page}
+            totalPages={data.page}
             size='lg'
             variant='flat'
           />

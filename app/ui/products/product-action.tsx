@@ -16,9 +16,10 @@ import {
   addToCart,
   redirectToSingleCheckout,
 } from '@/app/lib/actions';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormState } from 'react-dom';
 import { useTotalCart } from '@/app/context/cart-provider';
 import toast from 'react-hot-toast';
+import { ActionButton } from './action-button';
 
 type Props = {
   product: Product;
@@ -38,13 +39,17 @@ export default function ProductAction({
   const initialState: CartActionState = { status: 'iddle', message: null };
   const [state, formActionAddToCart] = useFormState(
     async (prevState: CartActionState, formData: FormData) => {
+      updateTotalCart((pendingState) => {
+        if (!!pendingState) {
+          return pendingState + Number(formData.get('quantity'));
+        }
+      });
       const data = await handleAddToCart(prevState, formData);
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      await queryClient.invalidateQueries({ queryKey: ['cart'] });
       return data;
     },
     initialState
   );
-  const { pending } = useFormStatus();
   const [totalCart, updateTotalCart] = useTotalCart();
 
   const productName = variant.variant_name
@@ -76,13 +81,18 @@ export default function ProductAction({
   }, [state]);
 
   return (
-    <Card as='form' shadow='none'>
+    <Card shadow='none'>
       <CardHeader className='flex-col p-0 items-start'>
         <h1 className='text-2xl font-bold'>Quantity</h1>
       </CardHeader>
       <CardBody className='px-0 items-center gap-5'>
         <div className='flex w-full justify-between items-center'>
-          {!!variant.stock && (
+          {!!!product.available && (
+            <span className='self-start text-danger'>
+              This product currently unavailable
+            </span>
+          )}
+          {!!variant.stock && !!product.available && (
             <span className='self-start'>Stock: {variant.stock}</span>
           )}
         </div>
@@ -102,7 +112,7 @@ export default function ProductAction({
             ))}
           </Select>
         )}
-        <ButtonGroup size='md'>
+        <ButtonGroup size='md' isDisabled={!product.available}>
           <Button
             isDisabled={qty <= 1}
             variant='bordered'
@@ -126,7 +136,6 @@ export default function ProductAction({
             }}
             type='number'
             size='sm'
-            name='quantity'
             variant='bordered'
             className='w-16'
             radius='none'
@@ -162,47 +171,46 @@ export default function ProductAction({
       <CardFooter className='px-0 flex-col gap-3'>
         <span className='text-xl font-bold self-start'>
           Total:{' '}
-          {formatIDR(variant.price * (Number(qty) || 1), {
-            maximumSignificantDigits: 3,
-          })}
+          {formatIDR(variant.price * (Number(qty) || 1)).replace(
+            /(\.|,)00$/g,
+            ''
+          )}
         </span>
-        <Button
-          isDisabled={
-            (!!variant.stock ? qty > variant.stock : qty === 0) || pending
-          }
-          fullWidth
-          variant='solid'
-          color='primary'
-          type='submit'
-          className='hover:bg-primary/80'
-          startContent={<TbShoppingCartPlus size={24} />}
-          formAction={(formData) => {
-            updateTotalCart(Number(formData.get('quantity')));
-            formActionAddToCart(formData);
-          }}
-        >
-          Add to Cart
-        </Button>
-        <Button
-          type='submit'
-          isDisabled={
-            (!!variant.stock ? qty > variant.stock : qty === 0) || pending
-          }
-          fullWidth
-          variant='ghost'
-          startContent={<IoBagOutline size={24} />}
-          formAction={async () => {
-            await redirectToSingleCheckout({
-              name: productName,
-              image: product.images[0].url,
-              price: variant.price,
-              quantity: qty,
-              sku: variant.sku,
-            });
-          }}
-        >
-          Checkout
-        </Button>
+        <form className='w-full'>
+          <ActionButton
+            isDisabled={!!variant.stock ? qty > variant.stock : qty === 0}
+            fullWidth
+            variant='solid'
+            color='primary'
+            className='hover:bg-primary/80'
+            startContent={<TbShoppingCartPlus size={24} />}
+            formAction={(formData) => {
+              formData.append('quantity', qty.toString());
+              formActionAddToCart(formData);
+            }}
+          >
+            Add to Cart
+          </ActionButton>
+        </form>
+        <form className='w-full'>
+          <ActionButton
+            isDisabled={!!variant.stock ? qty > variant.stock : qty === 0}
+            fullWidth
+            variant='ghost'
+            startContent={<IoBagOutline size={24} />}
+            formAction={async () => {
+              await redirectToSingleCheckout({
+                name: productName,
+                image: product.images[0].url,
+                price: variant.price,
+                quantity: qty,
+                sku: variant.sku,
+              });
+            }}
+          >
+            Checkout
+          </ActionButton>
+        </form>
       </CardFooter>
     </Card>
   );

@@ -25,6 +25,7 @@ export default function LimitController({ limit }: { limit: number }) {
       label='Limit'
       className='w-28'
       type='number'
+      isClearable={false}
       onInputChange={handleLimit}
       defaultInputValue={limit.toString()}
       defaultItems={limitRange}

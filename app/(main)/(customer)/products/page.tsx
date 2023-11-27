@@ -19,13 +19,14 @@ export default async function Page({
   };
 }) {
   const limit = Number(searchParams?.limit ?? 10);
+  const search = searchParams?.search ?? '';
   const category = searchParams?.category ?? '';
   const customizable = searchParams?.custom
     ? Boolean(searchParams?.custom)
     : undefined;
   const page = Number(searchParams?.page ?? 1);
   const offset = getOffset(page, limit);
-  const { data } = await fetchProductsPage({ limit, offset, category });
+  const { data } = await fetchProductsPage({ limit, offset, category, search });
   const { data: categories } = await fetchCategoreis();
   return (
     <main className='flex flex-col gap-3 justify-center items-center w-3/5 m-auto my-4'>
@@ -36,23 +37,23 @@ export default async function Page({
           categories={categories}
           category={category}
           defaultValue=''
-          defaultValueLabel='All'
+          defaultValueLabel='all'
           className='max-sm:w-24'
         />
       </div>
       <Suspense
-        key={category + limit + page + customizable + searchParams?.search}
+        key={category + limit + page + customizable + search}
         fallback={<ProductsListSkeleton limit={limit} />}
       >
         <ProductsList
           category={category}
           limit={limit}
           offset={offset}
-          search={searchParams?.search}
+          search={search}
           customizable={customizable}
         />
       </Suspense>
-      <Pagination showControls totalPage={data.page} />
+      <Pagination showControls totalPages={data.page} />
     </main>
   );
 }

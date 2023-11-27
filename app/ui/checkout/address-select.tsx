@@ -1,12 +1,17 @@
 'use client';
 import { useShipping } from '@/app/context/shipping-provider';
-import { fetchAddresses } from '@/app/lib/client-data';
+import { fetchListAddress } from '@/app/lib/client-data';
+import { Button } from '@nextui-org/button';
 import { Select, SelectItem } from '@nextui-org/select';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { IoIosArrowForward } from 'react-icons/io';
 
 export default function AddressSelect() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const shipping = useShipping();
   const { data: session } = useSession();
   const {
@@ -15,11 +20,27 @@ export default function AddressSelect() {
     isSuccess,
   } = useQuery({
     queryKey: ['address', session?.accessToken],
-    queryFn: () => fetchAddresses(session?.accessToken ?? null),
+    queryFn: () => fetchListAddress(session?.accessToken ?? null),
     enabled: !!session?.accessToken,
   });
   const addressId = shipping((state) => state.addressId);
   const setAddressId = shipping((state) => state.setAddressId);
+  if (!(addresses?.length !== 0))
+    return (
+      <Button
+        variant='bordered'
+        className='justify-between'
+        size='lg'
+        fullWidth
+        endContent={<IoIosArrowForward />}
+        as={Link}
+        href={`/addresses/create?${new URLSearchParams({
+          callbackUrl: `${pathname}?${searchParams}`,
+        })}`}
+      >
+        Create Address
+      </Button>
+    );
   return (
     <Select
       isLoading={isLoading}

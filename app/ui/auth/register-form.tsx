@@ -4,19 +4,19 @@ import { Input } from '@nextui-org/input';
 import { Button } from '@nextui-org/button';
 import { AiFillEyeInvisible, AiFillEye } from 'react-icons/ai';
 import { useFormState, useFormStatus } from 'react-dom';
-import { register } from '@/app/lib/actions';
+import { RegisterState, register } from '@/app/lib/actions';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { SubmitButton } from '../submit-button';
 
 type Props = {
-  className: string;
+  className?: string;
 };
 
-export default function RegisterForm(props: Props) {
-  const initialState = { message: null, errors: {} };
+export default function RegisterForm({ className }: Props) {
+  const initialState: RegisterState = { message: null, errors: {} };
   const [state, action] = useFormState(register, initialState);
   const [isVisible, setIsVisible] = useState(false);
-  const { pending } = useFormStatus();
 
   useEffect(() => {
     if (!!state.message) {
@@ -24,7 +24,7 @@ export default function RegisterForm(props: Props) {
     }
   }, [state]);
   return (
-    <form {...props} action={action}>
+    <form className={className} action={action}>
       <Input
         type='text'
         name='name'
@@ -36,7 +36,6 @@ export default function RegisterForm(props: Props) {
           !!state.errors?.name &&
           state.errors.name.map((error: string) => <p key={error}>{error}</p>)
         }
-        isInvalid={!!state.errors?.name}
       />
       <Input
         name='email'
@@ -49,7 +48,6 @@ export default function RegisterForm(props: Props) {
           !!state.errors?.email &&
           state.errors.email.map((error: string) => <p key={error}>{error}</p>)
         }
-        isInvalid={!!state.errors?.email}
       />
       <Input
         type='tel'
@@ -62,7 +60,6 @@ export default function RegisterForm(props: Props) {
           !!state.errors?.phone &&
           state.errors.phone.map((error: string) => <p key={error}>{error}</p>)
         }
-        isInvalid={!!state.errors?.phone}
       />
       <Input
         label='Password'
@@ -90,7 +87,6 @@ export default function RegisterForm(props: Props) {
             <p key={error}>{error}</p>
           ))
         }
-        isInvalid={!!state.errors?.password}
       />
       <Input
         label='Confirm Password'
@@ -118,16 +114,10 @@ export default function RegisterForm(props: Props) {
             <p key={error}>{error}</p>
           ))
         }
-        isInvalid={!!state.errors?.password || !!state.errors?.confirm_password}
       />
-      <Button
-        isDisabled={pending}
-        type='submit'
-        color='primary'
-        className='font-bold'
-      >
+      <SubmitButton color='primary' className='font-bold'>
         Daftar
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

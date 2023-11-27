@@ -1,7 +1,7 @@
 import { Skeleton } from '@nextui-org/skeleton';
-import { Card, CardBody, CardFooter } from '@nextui-org/card';
+import { Card, CardHeader, CardBody, CardFooter } from '@nextui-org/card';
 import { Button } from '@nextui-org/button';
-import { Select } from '@nextui-org/react';
+import { Divider } from '@nextui-org/divider';
 
 export function FeaturedProductCardSkeleton() {
   return (
@@ -80,16 +80,16 @@ export function AddressCardSkeleton() {
     <Card
       shadow='sm'
       classNames={{
-        base: ['w-3/4'],
+        base: ['w-full'],
       }}
     >
       <CardBody>
         <div className='flex justify-between items-center'>
           <div className='flex flex-col gap-1 w-3/4'>
-            <Skeleton className='rounded-lg self-start w-fit'></Skeleton>
-            <Skeleton className='rounded-lg w-3/4'></Skeleton>
-            <Skeleton className='rounded-lg w-3/5'></Skeleton>
-            <Skeleton className='rounded-lg w-3/6'></Skeleton>
+            <Skeleton className='rounded-lg self-start w-20 h-7'></Skeleton>
+            <Skeleton className='rounded-lg w-3/4 h-7'></Skeleton>
+            <Skeleton className='rounded-lg w-3/5 h-7'></Skeleton>
+            <Skeleton className='rounded-lg w-3/6 h-7'></Skeleton>
             <div className='flex gap-3'>
               <Skeleton className='rounded-lg'>
                 <Button
@@ -169,5 +169,114 @@ export function CheckoutButtonSkeleton() {
     <Skeleton className='rounded-md'>
       <Button>Checkout</Button>
     </Skeleton>
+  );
+}
+
+export function CountdownSkeleton() {
+  return (
+    <div className='flex items-center justify-center px-5 py-5'>
+      <div>
+        <h1 className='text-3xl text-center mb-3 font-extralight'>
+          Please finish your payment in
+        </h1>
+        <div className='text-6xl text-center flex w-full items-center justify-center'>
+          <div className='w-24 mx-1 p-2 rounded-lg bg-slate-200'>
+            <div className='font-mono leading-none' x-text='hours'>
+              00
+            </div>
+            <div className='font-mono uppercase text-sm leading-none'>
+              Hours
+            </div>
+          </div>
+          <div className='text-2xl mx-1 font-extralight'>:</div>
+          <div className='w-24 mx-1 p-2 rounded-lg bg-slate-200'>
+            <div className='font-mono leading-none' x-text='minutes'>
+              00
+            </div>
+            <div className='font-mono uppercase text-sm leading-none'>
+              Minutes
+            </div>
+          </div>
+          <div className='text-2xl mx-1 font-extralight'>:</div>
+          <div className='w-24 mx-1 p-2 rounded-lg bg-slate-200'>
+            <div className='font-mono leading-none' x-text='seconds'>
+              00
+            </div>
+            <div className='font-mono uppercase text-sm leading-none'>
+              Seconds
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function PaymentCardSkeleton() {
+  return (
+    <Card fullWidth shadow='sm'>
+      <CardHeader className='justify-between items-center'>
+        <Skeleton className='rounded-md'>
+          <div className='font-bold h-4 w-24'></div>
+        </Skeleton>
+        <Skeleton className='rounded-md'>
+          <div className='font-bold h-4 w-28'></div>
+        </Skeleton>
+      </CardHeader>
+      <CardBody className='w-full space-x-4 h-24 flex flex-row items-center'>
+        <Skeleton className='rounded-md'>
+          <div className='w-24 h-12'></div>
+        </Skeleton>
+        <Divider orientation='vertical' />
+        <div className='flex flex-col gap-1'>
+          <Skeleton className='rounded-md'>
+            <span className='text-foreground'>Payment Method</span>
+          </Skeleton>
+          <Skeleton className='rounded-md'>
+            <span className='font-bold'>bank name</span>
+          </Skeleton>
+        </div>
+        <Divider orientation='vertical' />
+        <div className='flex flex-col gap-1 w-3/12'>
+          <Skeleton className='rounded-md'>
+            <span className='text-foreground'>Virtual Account</span>
+          </Skeleton>
+          <Skeleton className='rounded-md'>
+            <span className='font-bold'>00000000000</span>
+          </Skeleton>
+        </div>
+        <Divider orientation='vertical' />
+        <div className='flex flex-col gap-1'>
+          <Skeleton className='rounded-md'>
+            <span className='text-foreground'>Payment Amount</span>
+          </Skeleton>
+          <Skeleton className='rounded-md'>
+            <span className='font-bold'>Rp 00000000</span>
+          </Skeleton>
+        </div>
+      </CardBody>
+      <CardFooter className='justify-end items-center gap-3'>
+        <Skeleton className='rounded-md'>
+          <Button variant='solid' color='danger'>
+            Details
+          </Button>
+        </Skeleton>
+        <Skeleton className='rounded-md'>
+          <Button variant='solid' color='danger'>
+            Cancel
+          </Button>
+        </Skeleton>
+      </CardFooter>
+    </Card>
+  );
+}
+
+export function ListPaymentSkeleton() {
+  return (
+    <div className='flex flex-col gap-3 w-full'>
+      {[...Array(3)].map((_, key) => (
+        <PaymentCardSkeleton key={key} />
+      ))}
+    </div>
   );
 }
