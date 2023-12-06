@@ -1387,3 +1387,24 @@ async function uploadProductImage(
   }
   return json.data;
 }
+
+export async function deleteProduct(productId: number) {
+  const session = await auth();
+
+  const response = await fetch(`${baseUrl}/products/${productId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+  });
+
+  const json = (await response.json()) as APIResponse<
+    { message: string },
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+  revalidateTag('product');
+}

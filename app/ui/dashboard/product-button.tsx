@@ -31,7 +31,13 @@ export function CreateProduct() {
   );
 }
 
-export function DeleteProduct({ product }: { product: Product }) {
+export function DeleteProduct({
+  product,
+  deleteAction,
+}: {
+  product: Product;
+  deleteAction: () => Promise<void>;
+}) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   return (
     <>
@@ -58,6 +64,7 @@ export function DeleteProduct({ product }: { product: Product }) {
                   color='danger'
                   onPress={async () => {
                     onClose();
+                    await deleteAction();
                   }}
                 >
                   Delete

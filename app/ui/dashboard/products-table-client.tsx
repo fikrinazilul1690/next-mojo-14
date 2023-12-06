@@ -13,6 +13,8 @@ import {
 } from '@nextui-org/table';
 import { DeleteProduct, UpdateProduct } from './product-button';
 import { Product } from '@/app/lib/definitions';
+import { useOptimistic } from 'react';
+import { deleteProduct } from '@/app/lib/actions';
 
 const columns = [
   { name: 'Product', uid: 'product' },
@@ -27,6 +29,14 @@ export default function ProductsTableClient({
 }: {
   products: Product[];
 }) {
+  const [optimisticProducts, updateOptimisticProducts] =
+    useOptimistic(products);
+  const handleDeleteProduct = async (productId: number) => {
+    updateOptimisticProducts((pendingState: Product[]) =>
+      pendingState.filter((product) => product.id !== productId)
+    );
+    await deleteProduct(productId);
+  };
   return (
     <Table aria-label='Products tabel'>
       <TableHeader columns={columns}>
@@ -36,7 +46,7 @@ export default function ProductsTableClient({
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody items={products}>
+      <TableBody items={optimisticProducts}>
         {(product) => (
           <TableRow key={product.id}>
             <TableCell>
@@ -67,7 +77,12 @@ export default function ProductsTableClient({
                 <UpdateProduct
                   href={`/dashboard/products/${product.id}/edit`}
                 />
-                <DeleteProduct product={product} />
+                <DeleteProduct
+                  product={product}
+                  deleteAction={async () => {
+                    await handleDeleteProduct(product.id);
+                  }}
+                />
               </div>
             </TableCell>
           </TableRow>

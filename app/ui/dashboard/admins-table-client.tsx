@@ -18,7 +18,7 @@ const columns = [
   { name: 'Email', uid: 'email' },
   { name: 'Phone', uid: 'phone' },
   { name: 'Role', uid: 'role' },
-  { name: '', uid: 'actions' },
+  // { name: '', uid: 'actions' },
 ];
 
 export default function AdminsTableClient({ admins }: { admins: Admin[] }) {
@@ -55,11 +55,11 @@ export default function AdminsTableClient({ admins }: { admins: Admin[] }) {
             <TableCell>
               <Chip>{admin.role}</Chip>
             </TableCell>
-            <TableCell>
+            {/* <TableCell>
               <div className='relative flex items-center gap-2'>
                 {user?.id !== admin.id ? <button>Delete</button> : null}
               </div>
-            </TableCell>
+            </TableCell> */}
           </TableRow>
         )}
       </TableBody>
