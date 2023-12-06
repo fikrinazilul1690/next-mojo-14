@@ -6,6 +6,7 @@ import Pagination from '@/app/ui/pagination';
 import AdminsTable from '@/app/ui/dashboard/admins-table';
 import Breadcrumbs from '@/app/ui/breadcrumbs';
 import { RegisterAdmin } from '@/app/ui/dashboard/admins-button';
+import { RedirectType, redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -25,6 +26,9 @@ export default async function Page({
     limit,
     offset,
   });
+  if (currentPage > data.page) {
+    redirect('/dashboard/admins', RedirectType.replace);
+  }
 
   return (
     <div className='w-full'>

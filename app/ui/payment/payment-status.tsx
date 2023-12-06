@@ -9,7 +9,13 @@ import { Divider } from '@nextui-org/divider';
 import { Accordion, AccordionItem } from '@nextui-org/react';
 import React from 'react';
 import { formatIDR } from '@/app/lib/utils';
-import CountdownTimer from './countdown-timer';
+import dynamic from 'next/dynamic';
+import { CountdownSkeleton } from '../skeleton';
+
+const CountdownTimer = dynamic(() => import('./countdown-timer'), {
+  ssr: false,
+  loading: () => <CountdownSkeleton />,
+});
 
 export default function PaymentStatus({
   detailPayment: initialData,

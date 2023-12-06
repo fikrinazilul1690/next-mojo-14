@@ -12,6 +12,7 @@ export default async function ListOrder({
   offset?: number;
 }) {
   const orders = await fetchListOrder({ status, limit, offset });
+  console.log(orders);
   return (
     <div className='w-full flex flex-col gap-3'>
       <ListOrderInfo

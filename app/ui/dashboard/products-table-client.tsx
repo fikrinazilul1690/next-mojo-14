@@ -46,7 +46,10 @@ export default function ProductsTableClient({
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody items={optimisticProducts}>
+      <TableBody
+        emptyContent={'No rows to display.'}
+        items={optimisticProducts}
+      >
         {(product) => (
           <TableRow key={product.id}>
             <TableCell>

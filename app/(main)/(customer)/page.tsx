@@ -9,6 +9,7 @@ import { Suspense } from 'react';
 import { FeaturedProductsListSkeleton } from '@/app/ui/skeleton';
 import { getOffset } from '@/app/lib/utils';
 import Pagination from '@/app/ui/pagination';
+import { RedirectType, redirect } from 'next/navigation';
 
 export default async function Page({
   searchParams,
@@ -23,6 +24,9 @@ export default async function Page({
   const page = Number(searchParams?.page ?? 1);
   const offset = getOffset(page, limit);
   const { data } = await fetchProductsPage({ limit, offset, category });
+  if (page > data.page) {
+    redirect('/', RedirectType.replace);
+  }
   const { data: categories } = await fetchCategoreis();
   return (
     <main className='mx-auto relative'>

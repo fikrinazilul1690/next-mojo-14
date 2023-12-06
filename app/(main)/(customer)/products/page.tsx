@@ -6,6 +6,7 @@ import ProductsList from '@/app/ui/products/product-card';
 import LimitController from '@/app/ui/products/limit-controller';
 import { Suspense } from 'react';
 import { ProductsListSkeleton } from '@/app/ui/skeleton';
+import { RedirectType, redirect } from 'next/navigation';
 
 export default async function Page({
   searchParams,
@@ -27,6 +28,9 @@ export default async function Page({
   const page = Number(searchParams?.page ?? 1);
   const offset = getOffset(page, limit);
   const { data } = await fetchProductsPage({ limit, offset, category, search });
+  if (page > data.page) {
+    redirect('/products', RedirectType.replace);
+  }
   const { data: categories } = await fetchCategoreis();
   return (
     <main className='flex flex-col gap-3 justify-center items-center w-3/5 m-auto my-4'>

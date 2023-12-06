@@ -16,6 +16,10 @@ const orderStatuses = [
     name: 'On progress',
   },
   {
+    value: 'confirmed',
+    name: 'Confirmed',
+  },
+  {
     value: 'allocated',
     name: 'Allocated',
   },
@@ -33,7 +37,7 @@ export default function OrderStatusFilter({
   status,
   className,
 }: {
-  status: string;
+  status?: string;
   className?: string;
 }) {
   const { replace } = useRouter();
@@ -57,7 +61,7 @@ export default function OrderStatusFilter({
           'max-sm:justify-start flex-nowrap max-sm:overflow-x-scroll overflow-hidden',
       }}
       orientation='horizontal'
-      value={status}
+      value={status ?? 'all'}
       onValueChange={handleChange}
     >
       {orderStatuses.map((status) => (

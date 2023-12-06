@@ -1778,3 +1778,24 @@ export async function registerAdmin(
 
   redirect('/dashboard/admins');
 }
+
+export async function requestPickUp(orderId: string) {
+  const session = await auth();
+
+  const response = await fetch(`${baseUrl}/orders/${orderId}/pick-up`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+  });
+
+  const json = (await response.json()) as APIResponse<
+    { message: string },
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+  revalidateTag('order');
+}

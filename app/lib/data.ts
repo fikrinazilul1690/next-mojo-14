@@ -85,7 +85,7 @@ export async function fetchFeaturedProducts(
       next: {
         tags: ['product'],
       },
-      cache: 'force-cache',
+      cache: 'no-cache',
     }
   );
   const json = (await response.json()) as APIResponse<
@@ -123,11 +123,49 @@ export async function fetchProductsPage(props?: {
       next: {
         tags: ['product'],
       },
-      cache: 'force-cache',
+      cache: 'no-cache',
     }
   );
   const json = (await response.json()) as APIResponse<
     { page: number; total_products: number },
+    { message: string }
+  >;
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+  return json;
+}
+
+export async function fetchOrdersPage(props?: {
+  status?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<
+  APIResponse<{ page: number; total_orders: number }, { message: string }>
+> {
+  const session = await auth();
+  const response = await fetch(
+    `${baseUrl}/orders/count-page?` +
+      new URLSearchParams({
+        ...Object.fromEntries(
+          Object.entries(props ?? {})
+            .filter(([_key, value]) => value !== undefined)
+            .map(([key, value]) => [key, String(value)])
+        ),
+      }),
+    {
+      method: 'GET',
+      next: {
+        tags: ['order'],
+      },
+      headers: {
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+      cache: 'no-cache',
+    }
+  );
+  const json = (await response.json()) as APIResponse<
+    { page: number; total_orders: number },
     { message: string }
   >;
   if (!response.ok) {
@@ -160,7 +198,7 @@ export async function fetchProducts(props?: {
       next: {
         tags: ['product'],
       },
-      cache: 'force-cache',
+      cache: 'no-cache',
     }
   );
   const json = (await response.json()) as APIResponse<
@@ -504,117 +542,6 @@ export async function fetchAdminsPage(props?: {
   return json;
 }
 
-export const colorData = [
-  {
-    name: 'Black',
-    hex: '#000000',
-  },
-  {
-    name: 'Blue',
-    hex: '#0000FF',
-  },
-  {
-    name: 'Brown',
-    hex: '#A52A2A',
-  },
-  {
-    name: 'Burgundy',
-    hex: '#800020',
-  },
-  {
-    name: 'Chocolate',
-    hex: '#D2691E',
-  },
-  {
-    name: 'Cyan',
-    hex: '#00FFFF',
-  },
-  {
-    name: 'Gold',
-    hex: '#FFD700',
-  },
-  {
-    name: 'Gray',
-    hex: '#808080',
-  },
-  {
-    name: 'Green',
-    hex: '#008000',
-  },
-  {
-    name: 'Lavender',
-    hex: '#E6E6FA',
-  },
-  {
-    name: 'Lime',
-    hex: '#00FF00',
-  },
-  {
-    name: 'Magenta',
-    hex: '#FF00FF',
-  },
-  {
-    name: 'Maroon',
-    hex: '#800000',
-  },
-  {
-    name: 'Navy',
-    hex: '#000080',
-  },
-  {
-    name: 'Orange',
-    hex: '#FF7F00',
-  },
-  {
-    name: 'Peach',
-    hex: '#FFE5B4',
-  },
-  {
-    name: 'Pink',
-    hex: '#FFC0CB',
-  },
-  {
-    name: 'Purple',
-    hex: '#800080',
-  },
-  {
-    name: 'Red',
-    hex: '#FF0000',
-  },
-  {
-    name: 'Rose',
-    hex: '#FF007F',
-  },
-  {
-    name: 'Tangerine',
-    hex: '#F28500',
-  },
-  {
-    name: 'Teal',
-    hex: '#008080',
-  },
-  {
-    name: 'Turquoise',
-    hex: '#40E0D0',
-  },
-  {
-    name: 'Vanilla',
-    hex: '#F3E5AB',
-  },
-  {
-    name: 'Violet',
-    hex: '#8F00FF',
-  },
-  {
-    name: 'White',
-    hex: '#FFFFFF',
-  },
-  {
-    name: 'Yellow',
-    hex: '#FFFF00',
-  },
-];
-
 export default async function fetchListAddress(): Promise<ListAddresses> {
   const session = await auth();
   await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -728,6 +655,8 @@ export async function fetchListOrder(props?: {
     OrderInfo[],
     { message: string }
   >;
+
+  console.log(json);
 
   if (!response.ok) {
     throw new Error(JSON.stringify(json));

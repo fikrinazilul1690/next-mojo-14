@@ -2,7 +2,6 @@
 import Link from 'next/link';
 import { Tooltip } from '@nextui-org/tooltip';
 import { Button } from '@nextui-org/button';
-import { BiSolidEditAlt } from 'react-icons/bi';
 import { RiDeleteBin5Line } from 'react-icons/ri';
 import { AiOutlinePlus } from 'react-icons/ai';
 import {
@@ -13,7 +12,7 @@ import {
   ModalFooter,
 } from '@nextui-org/modal';
 import { useDisclosure } from '@nextui-org/react';
-import { Product, User } from '@/app/lib/definitions';
+import { User } from '@/app/lib/definitions';
 
 export function RegisterAdmin() {
   return (
