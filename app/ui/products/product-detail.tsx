@@ -16,7 +16,7 @@ export default function ProductDetail({
   selectedVariant: variant,
 }: Props) {
   const productName = variant.variant_name
-    ? `${product.name} - (${variant.variant_name.replace('_', ', ')})`
+    ? `${product.name} - (${variant.variant_name.replaceAll('_', ', ')})`
     : product.name;
   return (
     <Card

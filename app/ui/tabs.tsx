@@ -13,7 +13,7 @@ export default function NavTabs({ variant, size }: Props) {
   return (
     <Tabs
       variant={variant}
-      selectedKey={pathname.replace('/', '')}
+      selectedKey={pathname.replaceAll('/', '')}
       size={size}
       aria-label='Tabs variants'
       className='mt-7'

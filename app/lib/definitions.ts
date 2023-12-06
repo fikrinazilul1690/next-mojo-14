@@ -203,6 +203,14 @@ export type RegisterError = {
   confirm_password?: string[];
 };
 
+export type RegisterAdminError = {
+  message?: string;
+  name?: string[];
+  email?: string[];
+  phone?: string[];
+  password?: string[];
+};
+
 export type ChangePasswordError = {
   message?: string;
   password?: string[];

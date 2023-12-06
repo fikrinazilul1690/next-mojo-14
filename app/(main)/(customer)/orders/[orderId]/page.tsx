@@ -22,7 +22,7 @@ export default async function Page({
             <div className='text-sm flex justify-between'>
               <span className='text-foreground-400'>Status :</span>
               <span className='font-bold'>
-                {detailOrder.status.replace('_', ' ')}
+                {detailOrder.status.replaceAll('_', ' ')}
               </span>
             </div>
             <div className='text-sm  flex justify-between'>

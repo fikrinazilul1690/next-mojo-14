@@ -22,7 +22,7 @@ import { useVariants } from '@/app/lib/hooks';
 import InputMaterials from './input-materials';
 import Link from 'next/link';
 import { SubmitButton } from '../submit-button';
-import { CreateProductState, createProduct } from '@/app/lib/actions';
+import { UpdateProductState, updateProduct } from '@/app/lib/actions';
 import { useFormState } from 'react-dom';
 
 const listSelectionType = ['color', 'material'];
@@ -35,7 +35,8 @@ export default function UpdateProductForm({ product }: { product: Product }) {
     url: '',
     value: '',
   };
-  const initialState: CreateProductState = {
+  const initialState: UpdateProductState = {
+    status: 'iddle',
     message: null,
     errors: {},
   };
@@ -82,14 +83,18 @@ export default function UpdateProductForm({ product }: { product: Product }) {
     })
   );
   const [model, setModel] = useState<File>();
-  const handleCreateProduct = createProduct.bind(
+  const handleUpdateProduct = updateProduct.bind(
     null,
-    true,
+    product.id,
+    product.customizable,
     selections,
     variants
   );
   const [state, action] = useFormState(
-    async (pervState: CreateProductState, formData: FormData) => {
+    async (
+      pervState: UpdateProductState,
+      formData: FormData
+    ): Promise<UpdateProductState> => {
       if (model) {
         formData.append('model', model);
       }
@@ -102,7 +107,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
           formData.append('images', file.data);
         }
       });
-      return await handleCreateProduct(pervState, formData);
+      return await handleUpdateProduct(pervState, formData);
     },
     initialState
   );
@@ -168,7 +173,14 @@ export default function UpdateProductForm({ product }: { product: Product }) {
 
   useEffect(() => {
     if (state.message) {
-      toast.error(state.message);
+      if (state.status === 'error') {
+        toast.error(state.message);
+        return;
+      }
+      if (state.status === 'success') {
+        toast.success(state.message);
+        return;
+      }
     }
   }, [state]);
 
@@ -222,7 +234,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
             variant='bordered'
             endContent={
               <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-small'>gram</span>
+                <span className='text-default-400 text-tiny'>gram</span>
               </div>
             }
             label='Weight'
@@ -243,7 +255,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
             variant='bordered'
             endContent={
               <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-small'>cm</span>
+                <span className='text-default-400 text-tiny'>cm</span>
               </div>
             }
             defaultValue={product.dimension.width.toString()}
@@ -266,7 +278,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
             variant='bordered'
             endContent={
               <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-small'>cm</span>
+                <span className='text-default-400 text-tiny'>cm</span>
               </div>
             }
             defaultValue={product.dimension.length.toString()}
@@ -289,7 +301,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
             variant='bordered'
             endContent={
               <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-small'>cm</span>
+                <span className='text-default-400 text-tiny'>cm</span>
               </div>
             }
             defaultValue={product.dimension.height.toString()}
@@ -311,21 +323,23 @@ export default function UpdateProductForm({ product }: { product: Product }) {
         </div>
       </div>
       <div className='flex flex-col gap-4'>
-        <span className='text-sm'>Product Images</span>
-        {!!state.errors?.images && (
-          <span className='flex flex-col gap-1 text-small text-danger'>
-            {state.errors.images.map((error: string) => (
-              <p key={error}>{error}</p>
-            ))}
-          </span>
-        )}
+        <div className='flex flex-col gap-1'>
+          <span className='text-sm'>Product Images</span>
+          {!!state.errors?.images && (
+            <span className='flex flex-col gap-1 text-tiny text-danger'>
+              {state.errors.images.map((error: string) => (
+                <p key={error}>{error}</p>
+              ))}
+            </span>
+          )}
+        </div>
         <div className='flex justify-start gap-5'>
           {files.map((file, key) => (
             <div
               key={key}
               className={clsx('w-36 h-36', {
-                'border-2 rounded-md border-dashed': !!!file.data,
-                'border border-black rounded-md border-solid': !!file.data,
+                'border-2 rounded-md border-dashed': !!!file.url,
+                'border border-black rounded-md border-solid': !!file.url,
               })}
             >
               {file.name ? (
@@ -374,7 +388,16 @@ export default function UpdateProductForm({ product }: { product: Product }) {
         ))}
       </div>
       <div className='flex flex-col gap-4'>
-        <span className='text-sm'>Product Model</span>
+        <div className='flex flex-col gap-1'>
+          <span className='text-sm'>Product Model</span>
+          {!!state.errors?.model && (
+            <span className='flex flex-col gap-1 text-tiny text-danger'>
+              {state.errors.model.map((error: string) => (
+                <p key={error}>{error}</p>
+              ))}
+            </span>
+          )}
+        </div>
         {!!product.model && (
           <span className='text-sm'>
             model: {model?.name ?? product.model.name}
@@ -391,24 +414,17 @@ export default function UpdateProductForm({ product }: { product: Product }) {
             }
           }}
         />
-        {!!state.errors?.model && (
-          <span className='flex flex-col gap-1 text-small text-danger'>
-            {state.errors.model.map((error: string) => (
-              <p key={error}>{error}</p>
-            ))}
-          </span>
-        )}
       </div>
       <div className='flex flex-col gap-1 w-full'>
         {state.errors?.variant && (
-          <span className='flex flex-col gap-1 text-small text-danger'>
+          <span className='flex flex-col gap-1 text-tiny text-danger'>
             {state.errors.variant.map((error: string) => (
               <p key={error}>{error}</p>
             ))}
           </span>
         )}
         {state.errors?.selections && (
-          <span className='flex flex-col gap-1 text-small text-danger'>
+          <span className='flex flex-col gap-1 text-tiny text-danger'>
             {state.errors.selections.map((error: string) => (
               <p key={error}>{error}</p>
             ))}
@@ -416,7 +432,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
         )}
         <div className='flex gap-4 w-full items-start'>
           <Switch
-            defaultChecked={product.featured}
+            defaultSelected={product.featured}
             value='true'
             classNames={{
               base: cn(
@@ -445,7 +461,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
             </div>
           </Switch>
           <Switch
-            defaultChecked={product.available}
+            defaultSelected={product.available}
             value='true'
             classNames={{
               base: cn(
@@ -482,7 +498,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
             variant='bordered'
             startContent={
               <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-small'>Rp</span>
+                <span className='text-default-400 text-tiny'>Rp</span>
               </div>
             }
             label='Product Price'
@@ -574,10 +590,10 @@ export default function UpdateProductForm({ product }: { product: Product }) {
                             className={`block w-4 h-4`}
                             style={{ backgroundColor: option.hex_code }}
                           ></span>
-                          <span>{option.value.replace('-', ' ')}</span>
+                          <span>{option.value.replaceAll('-', ' ')}</span>
                         </div>
                       ) : (
-                        option.value.replace('-', ' ')
+                        option.value.replaceAll('-', ' ')
                       )}
                     </Chip>
                   ))}
@@ -662,7 +678,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
                   <div className='w-full flex flex-col gap-2' key={index}>
                     <div className='w-full flex flex-col gap-2'>
                       <div className='flex gap-5 items-center'>
-                        <span className='text-small'>Variant</span>
+                        <span className='text-tiny'>Variant</span>
                         <Chip>
                           {variant.variant_name?.replace(/-|_/gi, (matched) => {
                             if (matched === '-') {
@@ -675,7 +691,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
                       <Input
                         startContent={
                           <div className='pointer-events-none flex items-center'>
-                            <span className='text-default-400 text-small'>
+                            <span className='text-default-400 text-tiny'>
                               Rp
                             </span>
                           </div>

@@ -20,8 +20,9 @@ export default function InputMaterials({
         <Button
           size='sm'
           variant='solid'
+          isDisabled={!!!value}
           onPress={() => {
-            const materialSlug = value.replace(' ', '-').toLowerCase();
+            const materialSlug = value.replaceAll(' ', '-').toLowerCase();
             setSelectedColors((prev) =>
               prev.map((currSel) => {
                 if (currSel.name === 'material') {

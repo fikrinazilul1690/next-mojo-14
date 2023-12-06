@@ -9,7 +9,6 @@ import type {
   WishlistItem,
   CheckoutItem,
   DetailPayment,
-  Admin,
   ListAddresses,
   CustomerAddress,
   OrderInfo,
@@ -429,10 +428,10 @@ export async function fetchDetailPayment(
   return json.data;
 }
 
-export async function fetchAdminList(props?: {
+export async function fetchListAdmin(props?: {
   limit?: number;
   offset?: number;
-}): Promise<Admin[] | undefined> {
+}): Promise<User[] | undefined> {
   const session = await auth();
   if (!session) {
     return undefined;
@@ -457,7 +456,7 @@ export async function fetchAdminList(props?: {
     }
   );
   const json = (await response.json()) as APIResponse<
-    Admin[],
+    User[],
     { message: string }
   >;
 

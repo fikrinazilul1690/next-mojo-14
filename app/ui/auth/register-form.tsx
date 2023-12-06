@@ -1,9 +1,8 @@
 'use client';
 
 import { Input } from '@nextui-org/input';
-import { Button } from '@nextui-org/button';
 import { AiFillEyeInvisible, AiFillEye } from 'react-icons/ai';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormState } from 'react-dom';
 import { RegisterState, register } from '@/app/lib/actions';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';

@@ -6,6 +6,7 @@ import Pagination from '@/app/ui/pagination';
 import Search from '@/app/ui/search';
 import ProductsTable from '@/app/ui/dashboard/products-table';
 import { CreateProduct } from '@/app/ui/dashboard/product-button';
+import Breadcrumbs from '@/app/ui/breadcrumbs';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -32,7 +33,15 @@ export default async function Page({
   return (
     <div className='w-full'>
       <div className='flex w-full items-center justify-between'>
-        <h1 className={`text-2xl`}>Products</h1>
+        <Breadcrumbs
+          breadcrumbs={[
+            {
+              label: 'Products',
+              href: `/dashboard/products`,
+              active: true,
+            },
+          ]}
+        />
       </div>
       <div className='mt-4 flex items-center justify-between gap-2 md:mt-8'>
         <Search placeholder='Search products...' />

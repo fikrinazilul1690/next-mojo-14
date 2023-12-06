@@ -8,21 +8,31 @@ import {
   TableRow,
   TableCell,
 } from '@nextui-org/table';
-import { Admin } from '@/app/lib/definitions';
+import { User } from '@/app/lib/definitions';
 import { Chip } from '@nextui-org/chip';
 import { Avatar } from '@nextui-org/avatar';
 import { useUser } from '@/app/context/user-provider';
+import { DeleteAdmin } from './admins-button';
+import { useOptimistic } from 'react';
+import { deleteAdmin } from '@/app/lib/actions';
 
 const columns = [
   { name: 'Name', uid: 'name' },
   { name: 'Email', uid: 'email' },
   { name: 'Phone', uid: 'phone' },
   { name: 'Role', uid: 'role' },
-  // { name: '', uid: 'actions' },
+  { name: '', uid: 'actions' },
 ];
 
-export default function AdminsTableClient({ admins }: { admins: Admin[] }) {
+export default function AdminsTableClient({ users }: { users: User[] }) {
   const [user] = useUser();
+  const [optimisticListAdmin, updateOptimisticListAdmin] = useOptimistic(users);
+  const handleDeleteAdmin = async (userId: string) => {
+    updateOptimisticListAdmin((pendingState: User[]) =>
+      pendingState.filter((user) => user.id !== userId)
+    );
+    await deleteAdmin(userId);
+  };
   return (
     <Table aria-label='Products tabel'>
       <TableHeader columns={columns}>
@@ -32,7 +42,7 @@ export default function AdminsTableClient({ admins }: { admins: Admin[] }) {
           </TableColumn>
         )}
       </TableHeader>
-      <TableBody items={admins}>
+      <TableBody items={optimisticListAdmin}>
         {(admin) => (
           <TableRow key={admin.id}>
             <TableCell>
@@ -55,11 +65,18 @@ export default function AdminsTableClient({ admins }: { admins: Admin[] }) {
             <TableCell>
               <Chip>{admin.role}</Chip>
             </TableCell>
-            {/* <TableCell>
+            <TableCell>
               <div className='relative flex items-center gap-2'>
-                {user?.id !== admin.id ? <button>Delete</button> : null}
+                {user?.role === 'owner' && user?.id !== admin.id ? (
+                  <DeleteAdmin
+                    user={admin}
+                    deleteAction={async () => {
+                      await handleDeleteAdmin(admin.id);
+                    }}
+                  />
+                ) : null}
               </div>
-            </TableCell> */}
+            </TableCell>
           </TableRow>
         )}
       </TableBody>

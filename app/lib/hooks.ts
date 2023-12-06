@@ -66,15 +66,13 @@ const generateVariants = (
           prev.find((value) => value.variant_name === option.value)?.price ?? 0,
         variant_name: option.value,
       }));
-      console.log(data);
       return data;
     });
     return;
   }
   if (selections.length === 2) {
-    let out: Required<Omit<Variant, 'sku' | 'stock'>>[] = [];
-
     setVariants((prev) => {
+      let out: Required<Omit<Variant, 'sku' | 'stock'>>[] = [];
       selections[0].options.forEach((option) => {
         selections[1].options.forEach((secondOption) => {
           out.push({

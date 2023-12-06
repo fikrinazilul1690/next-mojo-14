@@ -53,7 +53,7 @@ export default function ProductAction({
   const [totalCart, updateTotalCart] = useTotalCart();
 
   const productName = variant.variant_name
-    ? `${product.name} - (${variant.variant_name.replace('_', ', ')})`
+    ? `${product.name} - (${variant.variant_name.replaceAll('_', ', ')})`
     : product.name;
 
   const handleChange = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -107,7 +107,7 @@ export default function ProductAction({
           >
             {product?.variant.map((val) => (
               <SelectItem key={val.sku} value={val.sku}>
-                {val.variant_name?.replace('_', '-')}
+                {val.variant_name?.replaceAll('_', '-')}
               </SelectItem>
             ))}
           </Select>

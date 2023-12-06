@@ -4,6 +4,8 @@ import { fetchAdminsPage } from '@/app/lib/data';
 import { getOffset } from '@/app/lib/utils';
 import Pagination from '@/app/ui/pagination';
 import AdminsTable from '@/app/ui/dashboard/admins-table';
+import Breadcrumbs from '@/app/ui/breadcrumbs';
+import { RegisterAdmin } from '@/app/ui/dashboard/admins-button';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -26,12 +28,14 @@ export default async function Page({
 
   return (
     <div className='w-full'>
-      <div className='flex w-full items-center justify-between'>
-        <h1 className={`text-2xl`}>Admins</h1>
+      <div className='flex w-full items-start justify-between'>
+        <Breadcrumbs
+          breadcrumbs={[
+            { label: 'Admins', href: '/dashboard/admins', active: true },
+          ]}
+        />
+        <RegisterAdmin />
       </div>
-      {/* <div className='mt-4 flex items-center justify-end md:mt-8'>
-        <CreateProduct />
-      </div> */}
       <Suspense key={currentPage} fallback={<div>Loading</div>}>
         <AdminsTable limit={limit} offset={offset} />
       </Suspense>

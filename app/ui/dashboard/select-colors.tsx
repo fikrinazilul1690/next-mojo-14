@@ -45,7 +45,7 @@ export default function SelectColors({
         setSearch('');
         const colorSlug = String(e);
         const color = colors?.find(
-          (color) => color.name.replace(' ', '-').toLowerCase() === colorSlug
+          (color) => color.name.replaceAll(' ', '-').toLowerCase() === colorSlug
         );
         if (color) {
           setSelectedColors((prev) =>
@@ -75,7 +75,7 @@ export default function SelectColors({
       {(color) => (
         <AutocompleteItem
           textValue={color.name}
-          key={color.name.replace(' ', '-').toLowerCase()}
+          key={color.name.replaceAll(' ', '-').toLowerCase()}
           value={color.name}
         >
           <div className='flex gap-2'>

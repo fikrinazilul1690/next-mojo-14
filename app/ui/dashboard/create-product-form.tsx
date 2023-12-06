@@ -177,7 +177,7 @@ export default function CreateProductForm() {
             variant='bordered'
             endContent={
               <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-small'>gram</span>
+                <span className='text-default-400 text-tiny'>gram</span>
               </div>
             }
             label='Weight'
@@ -197,7 +197,7 @@ export default function CreateProductForm() {
             variant='bordered'
             endContent={
               <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-small'>cm</span>
+                <span className='text-default-400 text-tiny'>cm</span>
               </div>
             }
             label='Width'
@@ -219,7 +219,7 @@ export default function CreateProductForm() {
             variant='bordered'
             endContent={
               <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-small'>cm</span>
+                <span className='text-default-400 text-tiny'>cm</span>
               </div>
             }
             label='Length'
@@ -241,7 +241,7 @@ export default function CreateProductForm() {
             variant='bordered'
             endContent={
               <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-small'>cm</span>
+                <span className='text-default-400 text-tiny'>cm</span>
               </div>
             }
             type='number'
@@ -262,14 +262,16 @@ export default function CreateProductForm() {
         </div>
       </div>
       <div className='flex flex-col gap-4'>
-        <span className='text-sm'>Product Images</span>
-        {!!state.errors?.images && (
-          <span className='flex flex-col gap-1 text-small text-danger'>
-            {state.errors.images.map((error: string) => (
-              <p key={error}>{error}</p>
-            ))}
-          </span>
-        )}
+        <div className='flex flex-col gap-1'>
+          <span className='text-sm'>Product Images</span>
+          {!!state.errors?.images && (
+            <span className='flex flex-col gap-1 text-tiny text-danger'>
+              {state.errors.images.map((error: string) => (
+                <p key={error}>{error}</p>
+              ))}
+            </span>
+          )}
+        </div>
         <div className='flex justify-start gap-5'>
           {files.map((file, key) => (
             <div
@@ -325,7 +327,16 @@ export default function CreateProductForm() {
         ))}
       </div>
       <div className='flex flex-col gap-4'>
-        <span className='text-sm'>Product Model</span>
+        <div className='flex flex-col gap-1'>
+          <span className='text-sm'>Product Model</span>
+          {!!state.errors?.model && (
+            <span className='flex flex-col gap-1 text-tiny text-danger'>
+              {state.errors.model.map((error: string) => (
+                <p key={error}>{error}</p>
+              ))}
+            </span>
+          )}
+        </div>
         <input
           type='file'
           className='border-2 cursor-pointer border-foreground-200 hover:shadow-sm hover:border-foreground-400 border-solid rounded-md p-3'
@@ -337,20 +348,13 @@ export default function CreateProductForm() {
             }
           }}
         />
-        {!!state.errors?.model && (
-          <span className='flex flex-col gap-1 text-small text-danger'>
-            {state.errors.model.map((error: string) => (
-              <p key={error}>{error}</p>
-            ))}
-          </span>
-        )}
       </div>
       <div className='flex gap-4 w-full items-start'>
         <Switch
           value='true'
           classNames={{
             base: cn(
-              'inline-flex flex-row-reverse w-full max-w-full bg-content1 hover:bg-content2 items-center',
+              'inline-flex self-stretch flex-row-reverse w-full max-w-full bg-content1 hover:bg-content2 items-center',
               'justify-between cursor-pointer rounded-lg gap-2 p-4 border-2 border-foreground-600',
               'data-[selected=true]:border-primary'
             ),
@@ -374,7 +378,7 @@ export default function CreateProductForm() {
             </p>
           </div>
         </Switch>
-        <div className='flex flex-col gap-1'>
+        <div className='flex w-full flex-col gap-1'>
           <Switch
             isSelected={customizable}
             onValueChange={(isSelected) => {
@@ -412,14 +416,14 @@ export default function CreateProductForm() {
             </div>
           </Switch>
           {state.errors?.variant && (
-            <span className='flex flex-col gap-1 text-small text-danger'>
+            <span className='flex flex-col gap-1 text-tiny text-danger'>
               {state.errors.variant.map((error: string) => (
                 <p key={error}>{error}</p>
               ))}
             </span>
           )}
           {state.errors?.selections && (
-            <span className='flex flex-col gap-1 text-small text-danger'>
+            <span className='flex flex-col gap-1 text-tiny text-danger'>
               {state.errors.selections.map((error: string) => (
                 <p key={error}>{error}</p>
               ))}
@@ -433,7 +437,7 @@ export default function CreateProductForm() {
             variant='bordered'
             startContent={
               <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-small'>Rp</span>
+                <span className='text-default-400 text-tiny'>Rp</span>
               </div>
             }
             label='Product Price'
@@ -523,10 +527,10 @@ export default function CreateProductForm() {
                             className={`block w-4 h-4`}
                             style={{ backgroundColor: option.hex_code }}
                           ></span>
-                          <span>{option.value.replace('-', ' ')}</span>
+                          <span>{option.value.replaceAll('-', ' ')}</span>
                         </div>
                       ) : (
-                        option.value.replace('-', ' ')
+                        option.value.replaceAll('-', ' ')
                       )}
                     </Chip>
                   ))}
@@ -611,7 +615,7 @@ export default function CreateProductForm() {
                   <div className='w-full flex flex-col gap-2' key={index}>
                     <div className='w-full flex flex-col gap-2'>
                       <div className='flex gap-5 items-center'>
-                        <span className='text-small'>Variant</span>
+                        <span className='text-tiny'>Variant</span>
                         <Chip>
                           {variant.variant_name?.replace(/-|_/gi, (matched) => {
                             if (matched === '-') {
@@ -624,7 +628,7 @@ export default function CreateProductForm() {
                       <Input
                         startContent={
                           <div className='pointer-events-none flex items-center'>
-                            <span className='text-default-400 text-small'>
+                            <span className='text-default-400 text-tiny'>
                               Rp
                             </span>
                           </div>
