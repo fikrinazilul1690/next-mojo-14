@@ -52,6 +52,20 @@ export default function AddressSelect() {
       classNames={{
         trigger: 'h-12',
       }}
+      listboxProps={{
+        bottomContent: (
+          <Button
+            as={Link}
+            href={`/addresses/create?${new URLSearchParams({
+              callbackUrl: `${pathname}?${searchParams}`,
+            })}`}
+            fullWidth
+            variant='faded'
+          >
+            Create New Address
+          </Button>
+        ),
+      }}
       selectionMode='single'
       selectedKeys={
         isSuccess && addressId ? new Set([addressId.toString()]) : new Set()

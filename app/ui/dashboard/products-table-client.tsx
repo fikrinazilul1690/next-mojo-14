@@ -64,8 +64,10 @@ export default function ProductsTableClient({
             </TableCell>
             <TableCell>
               <div className='relative flex items-center gap-2'>
-                <UpdateProduct />
-                <DeleteProduct />
+                <UpdateProduct
+                  href={`/dashboard/products/${product.id}/edit`}
+                />
+                <DeleteProduct product={product} />
               </div>
             </TableCell>
           </TableRow>

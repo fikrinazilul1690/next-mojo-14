@@ -2,7 +2,7 @@
 
 import { auth, signIn, signOut } from '@/auth';
 import { redirect } from 'next/navigation';
-import z, { Schema } from 'zod';
+import z from 'zod';
 import {
   APIResponse,
   ChangePasswordError,
@@ -10,16 +10,21 @@ import {
   CreateAddressError,
   CustomerAddress,
   DetailPayment,
+  FileResponse,
   Item,
   Location,
+  ProductError,
   RegisterError,
+  SelectionProduct,
   UpdateProfileError,
   UploadResponse,
   User,
+  Variant,
 } from './definitions';
 import { baseUrl } from './data';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { encrypt } from './crypto';
+import { Session } from 'next-auth';
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -430,6 +435,7 @@ const CreateAddressSchema = z.object({
   is_primary: z
     .string()
     .optional()
+    .nullable()
     .transform((value) => value === 'true'),
 });
 
@@ -1020,4 +1026,364 @@ export async function deleteWishlist(
   } finally {
     revalidateTag('wishlist');
   }
+}
+
+const CreateProduct = z
+  .object({
+    name: z.string().min(3),
+    description: z.string().optional(),
+    category: z.string(),
+    dimension: z.object({
+      length: z.coerce
+        .number({
+          invalid_type_error: 'length must be a number',
+          required_error: 'length is required',
+        })
+        .min(1, { message: 'length must be 1 cm or more' })
+        .max(1000, { message: 'length must be 1000 cm or fewer' }),
+      width: z.coerce
+        .number({
+          invalid_type_error: 'width must be a number',
+          required_error: 'width is required',
+        })
+        .min(1, { message: 'width must be 1 cm or more' })
+        .max(1000, { message: 'width must be 1000 cm or fewer' }),
+      height: z.coerce
+        .number({
+          invalid_type_error: 'height must be a number',
+          required_error: 'height is required',
+        })
+        .min(1, { message: 'height must be 1 cm or more' })
+        .max(1000, { message: 'height must be 1000 cm or fewer' }),
+      unit: z.string(),
+    }),
+    weight: z.object({
+      value: z.coerce.number().min(1).max(500000),
+      unit: z.string(),
+    }),
+    available: z.boolean(),
+    featured: z
+      .string()
+      .nullable()
+      .optional()
+      .transform((value) => value === 'true'),
+    customizable: z.boolean(),
+    stock: z.coerce
+      .number()
+      .min(1, { message: 'stock must be 1 or more' })
+      .optional(),
+    price: z.coerce
+      .number()
+      .min(1000, { message: 'price must be 1000 or more' })
+      .optional(),
+    selections: z
+      .array(
+        z.object({
+          name: z.string(),
+          options: z.array(
+            z.object({
+              value: z.string(),
+              hex_code: z.string().optional(),
+            })
+          ),
+        })
+      )
+      .transform((value) => (value.length === 0 ? undefined : value)),
+    variant: z
+      .array(
+        z.object({
+          variant_name: z.string(),
+          price: z.coerce.number().min(1000),
+        })
+      )
+      .transform((value) => (value.length === 0 ? undefined : value)),
+    model: z
+      .string()
+      .uuid()
+      .transform((value) => ({
+        upload_id: value,
+      })),
+    images: z.array(z.string().uuid()).transform((value) =>
+      value.map((id) => ({
+        upload_id: id,
+      }))
+    ),
+  })
+  .superRefine((val, ctx) => {
+    if (val.customizable) {
+      console.log(val.customizable);
+      if (val.selections === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.invalid_type,
+          expected: 'array',
+          received: typeof val.selections,
+          fatal: true,
+          message: 'Selections is required if customizable is true',
+          path: ['selections'],
+        });
+      }
+      if (val.variant === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.invalid_type,
+          expected: 'array',
+          received: typeof val.variant,
+          fatal: true,
+          message: 'Variants is required if customizable is true',
+          path: ['variant'],
+        });
+      }
+      if (val.stock !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.invalid_type,
+          expected: 'undefined',
+          received: typeof val.stock,
+          fatal: true,
+          message: 'Stok is excepted if customizable is true',
+          path: ['stock'],
+        });
+      }
+      if (val.price !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.invalid_type,
+          expected: 'undefined',
+          received: typeof val.price,
+          fatal: true,
+          message: 'Price is excepted if customizable is true',
+          path: ['price'],
+        });
+      }
+    } else {
+      if (val.selections !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.invalid_type,
+          expected: 'undefined',
+          received: typeof val.selections,
+          fatal: true,
+          message: 'Selections is excepted if customizable is false',
+          path: ['selections'],
+        });
+      }
+      if (val.variant !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.invalid_type,
+          expected: 'undefined',
+          received: typeof val.variant,
+          fatal: true,
+          message: 'Variants is excepted if customizable is false',
+          path: ['variant'],
+        });
+      }
+      if (val.stock === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.invalid_type,
+          expected: 'number',
+          received: typeof val.stock,
+          fatal: true,
+          message: 'Stok is required if customizable is false',
+          path: ['stock'],
+        });
+      }
+      if (val.price === undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.invalid_type,
+          expected: 'number',
+          received: typeof val.price,
+          fatal: true,
+          message: 'Price is required if customizable is false',
+          path: ['price'],
+        });
+      }
+    }
+  });
+
+const UploadSchema = z.object({
+  images: z
+    .array(z.instanceof(Blob, { message: 'image is required' }))
+    .min(1, { message: 'images must be contain at least 1' }),
+  model: z.instanceof(Blob, { message: 'model is required' }),
+});
+
+export type CreateProductState = {
+  errors?: ProductError;
+  message?: string | null;
+};
+
+export async function createProduct(
+  customizable: boolean,
+  selctions: SelectionProduct[],
+  variant: Required<Omit<Variant, 'sku' | 'stock'>>[],
+  prevState: CreateProductState,
+  formData: FormData
+) {
+  const session = await auth();
+  const validateUpload = UploadSchema.safeParse({
+    images: formData.getAll('images'),
+    model: formData.get('model'),
+  });
+  if (!validateUpload.success) {
+    return {
+      errors: validateUpload.error.flatten().fieldErrors,
+    };
+  }
+  const { images: productImages, model: productModel } = validateUpload.data;
+
+  try {
+    const { model, images } = await uploadFiles(
+      session,
+      productImages,
+      productModel
+    );
+
+    const validateBasicFields = CreateProduct.safeParse({
+      name: formData.get('name'),
+      description: formData.get('description'),
+      category: formData.get('category'),
+      dimension: {
+        length: formData.get('length'),
+        width: formData.get('width'),
+        height: formData.get('height'),
+        unit: 'cm',
+      },
+      weight: {
+        value: formData.get('weight'),
+        unit: 'gr',
+      },
+      available: true,
+      featured: formData.get('featured'),
+      customizable: customizable,
+      selections: selctions,
+      variant: variant,
+      stock: formData.get('stock'),
+      price: formData.get('price'),
+      model: model.id,
+      images: images.map((image) => {
+        if (typeof image === 'string') {
+          return image;
+        }
+        return image.id;
+      }),
+    });
+
+    if (!validateBasicFields.success) {
+      return {
+        errors: validateBasicFields.error.flatten().fieldErrors,
+      };
+    }
+    const response = await fetch(`${baseUrl}/products/`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+      body: JSON.stringify({ ...validateBasicFields.data }),
+    });
+    const json = (await response.json()) as APIResponse<
+      { message: string } | undefined,
+      { message: string } | { [key: string]: any }
+    >;
+    if (json.code !== 200) {
+      throw new Error(JSON.stringify(json.errors));
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        message: error.message,
+      };
+    }
+  } finally {
+    revalidateTag('product');
+  }
+  redirect('/dashboard/products');
+}
+
+async function uploadModel(
+  session: Session | null,
+  file: Blob
+): Promise<FileResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await fetch(`${baseUrl}/uploads/products/models`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    body: formData,
+  });
+  const json = (await response.json()) as APIResponse<
+    FileResponse,
+    { message: string }
+  >;
+
+  if (json.code !== 200) {
+    throw new Error(json.errors.message);
+  }
+  return json.data;
+}
+
+async function uploadFiles(
+  session: Session | null,
+  files: Array<Blob | string>,
+  model: Blob
+): Promise<{ images: (FileResponse | string)[]; model: FileResponse }> {
+  const promises: Array<Promise<FileResponse | string>> = [];
+
+  if (files.length === 0) {
+    throw new Error('Product images is Required');
+  }
+
+  files.forEach((file) => {
+    if (file instanceof Blob) {
+      promises.push(uploadProductImage(session, file));
+      return;
+    }
+    promises.push(isEmptyString(file));
+  });
+
+  try {
+    const data = await Promise.all([
+      Promise.all(promises),
+      uploadModel(session, model),
+    ]);
+    return {
+      images: data[0],
+      model: data[1],
+    };
+  } catch (error) {
+    console.log(error);
+    throw new Error('failed to upload files, please try again !', {
+      cause: error,
+    });
+  }
+}
+
+const isEmptyString = (uploadId: string): Promise<string> =>
+  new Promise((resolve, reject) => {
+    if (!!uploadId) {
+      resolve(uploadId);
+      return;
+    }
+    reject();
+  });
+
+async function uploadProductImage(
+  session: Session | null,
+  file: Blob
+): Promise<FileResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await fetch(`${baseUrl}/uploads/products/images`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    body: formData,
+  });
+  const json = (await response.json()) as APIResponse<
+    FileResponse,
+    { message: string }
+  >;
+
+  if (json.code !== 200) {
+    throw new Error(json.errors.message);
+  }
+  return json.data;
 }

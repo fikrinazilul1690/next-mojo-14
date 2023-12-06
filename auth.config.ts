@@ -33,11 +33,17 @@ export const authConfig = {
 
         // pages for customer
         if (
-          pathname.startsWith('/settings') ||
-          pathname === '/my-orders' ||
-          pathname === '/order'
+          pathname.startsWith('/payment') ||
+          pathname.startsWith('/orders') ||
+          pathname.startsWith('/addresses') ||
+          pathname.startsWith('/checkout') ||
+          pathname === '/cart' ||
+          pathname === '/wishlist'
         ) {
           return auth?.user.role === 'customer';
+        }
+        if (pathname.startsWith('/settings')) {
+          return !!auth?.user.role;
         }
         return true;
       }, nextUrl);

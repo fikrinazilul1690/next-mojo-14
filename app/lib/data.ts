@@ -13,11 +13,15 @@ import type {
   ListAddresses,
   CustomerAddress,
   OrderInfo,
+  Color,
+  WikisColors,
+  ProductSoldStat,
 } from './definitions';
 import { Session } from 'next-auth';
 import { notFound, redirect } from 'next/navigation';
 import { z } from 'zod';
 import { decrypt } from './crypto';
+import { formatIDR } from './utils';
 
 export const baseUrl = 'https://toko-mojopahit-production.up.railway.app/v1';
 
@@ -749,6 +753,156 @@ export async function fetchOrderDetails(orderId: string): Promise<OrderInfo> {
   });
   const json = (await response.json()) as APIResponse<
     OrderInfo,
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data;
+}
+
+export async function fetchWikipediasColors(): Promise<Color[]> {
+  const response = await fetch('https://api.color.pizza/v1/?list=wikipedia', {
+    method: 'GET',
+    next: {
+      tags: ['color'],
+    },
+    cache: 'force-cache',
+  });
+  const json = (await response.json()) as WikisColors;
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+  return json.colors;
+}
+
+export async function fetchCardData() {
+  try {
+    const data = await Promise.all([
+      fetchTotalSuccessPayment(),
+      fetchTotalPendingPayment(),
+      fetchCountOrder(),
+      fetchCountTransaction(),
+    ]);
+    return {
+      totalPaid: formatIDR(data[0]),
+      totalPendingPayment: formatIDR(data[1]),
+      totalOrders: data[2],
+      totalTransactions: data[3],
+    };
+  } catch (error) {
+    console.log(error);
+    throw new Error('Failed to card data.');
+  }
+}
+
+export async function fetchCountOrder(): Promise<number> {
+  const session = await auth();
+  const response = await fetch(`${baseUrl}/orders/count`, {
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    next: {
+      tags: ['order'],
+    },
+    cache: 'no-cache',
+  });
+  const json = (await response.json()) as APIResponse<
+    { total_count: number },
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data.total_count;
+}
+
+export async function fetchCountTransaction(): Promise<number> {
+  const session = await auth();
+  const response = await fetch(`${baseUrl}/payments/count`, {
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    next: {
+      tags: ['payment'],
+    },
+    cache: 'no-cache',
+  });
+  const json = (await response.json()) as APIResponse<
+    { total_count: number },
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data.total_count;
+}
+
+export async function fetchTotalPendingPayment(): Promise<number> {
+  const session = await auth();
+  const response = await fetch(`${baseUrl}/payments/total-pending`, {
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    next: {
+      tags: ['payment'],
+    },
+    cache: 'no-cache',
+  });
+  const json = (await response.json()) as APIResponse<
+    { total: number },
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data.total;
+}
+
+export async function fetchTotalSuccessPayment(): Promise<number> {
+  const session = await auth();
+  const response = await fetch(`${baseUrl}/payments/total-success`, {
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    next: {
+      tags: ['payment'],
+    },
+    cache: 'no-cache',
+  });
+  const json = (await response.json()) as APIResponse<
+    { total: number },
+    { message: string }
+  >;
+
+  if (!response.ok) {
+    throw new Error(JSON.stringify(json));
+  }
+
+  return json.data.total;
+}
+
+export async function fetchProductSoldStats(): Promise<ProductSoldStat[]> {
+  const session = await auth();
+  const response = await fetch(`${baseUrl}/orders/stats`, {
+    headers: {
+      Authorization: `Bearer ${session?.accessToken}`,
+    },
+    next: {
+      tags: ['order'],
+    },
+    cache: 'no-cache',
+  });
+  const json = (await response.json()) as APIResponse<
+    ProductSoldStat[],
     { message: string }
   >;
 

@@ -1,4 +1,4 @@
-import { CartItem, CheckoutItem } from './definitions';
+import { CartItem, CheckoutItem, ProductSoldStat } from './definitions';
 
 export function formatIDR(num: number): string {
   return new Intl.NumberFormat('id-ID', {
@@ -46,3 +46,31 @@ export function formatDateWithTime(date: Date): string {
     minute: '2-digit',
   }).format(date);
 }
+
+export function formatMonthAndYearOnly(date: Date): string {
+  return new Intl.DateTimeFormat('id-ID', {
+    year: '2-digit',
+    month: 'short',
+  }).format(date);
+}
+
+export const toBase64 = (file: File) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+  });
+
+export const generateYAxis = (stat: ProductSoldStat[]) => {
+  // Calculate what labels we need to display on the y-axis
+  // based on highest record and in 1000s
+  const yAxisLabels = [];
+  const topLabel = Math.max(...stat.map((month) => month.total_product_sold));
+
+  for (let i = topLabel; i >= 0; i -= 1) {
+    yAxisLabels.push(i);
+  }
+
+  return { yAxisLabels, topLabel };
+};

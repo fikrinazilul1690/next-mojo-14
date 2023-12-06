@@ -12,7 +12,7 @@ import {
   Chip,
   Divider,
 } from '@nextui-org/react';
-import { SelectionProduct } from '@/app/lib/definitions';
+import { Product, SelectionProduct } from '@/app/lib/definitions';
 import Image from 'next/image';
 import clsx from 'clsx';
 import { RiImageAddFill, RiDeleteBin5Line } from 'react-icons/ri';
@@ -28,8 +28,9 @@ import { useFormState } from 'react-dom';
 const listSelectionType = ['color', 'material'];
 const MaxSizeInBytes = 10 * 1024 * 1024;
 
-export default function CreateProductForm() {
+export default function UpdateProductForm({ product }: { product: Product }) {
   const initialFile = {
+    name: '',
     data: null,
     url: '',
     value: '',
@@ -38,16 +39,52 @@ export default function CreateProductForm() {
     message: null,
     errors: {},
   };
-  const [customizable, setCustomizable] = useState(false);
-  const [selections, setSelections] = useState<SelectionProduct[]>([]);
-  const { variants, setVariants } = useVariants(selections, customizable);
+  const [selections, setSelections] = useState<SelectionProduct[]>(
+    product.selections ?? []
+  );
+  const { variants, setVariants } = useVariants(
+    selections,
+    product.customizable,
+    product.variant
+  );
   const [files, setFiles] = useState<
-    Array<{ data: File | null; url: string; value: string }>
-  >([initialFile, initialFile, initialFile]);
+    Array<{
+      data: File | null;
+      url: string;
+      name: string;
+      upload_id?: string;
+      value: string;
+    }>
+  >(
+    [...Array(3)].map<{
+      data: File | null;
+      url: string;
+      name: string;
+      upload_id?: string;
+      value: string;
+    }>((_, key) => {
+      const image = product.images[key];
+      if (image) {
+        return {
+          data: null,
+          name: image.name,
+          url: image.url,
+          value: '',
+          upload_id: image.id,
+        };
+      }
+      return {
+        data: null,
+        name: '',
+        url: '',
+        value: '',
+      };
+    })
+  );
   const [model, setModel] = useState<File>();
   const handleCreateProduct = createProduct.bind(
     null,
-    customizable,
+    true,
     selections,
     variants
   );
@@ -57,6 +94,10 @@ export default function CreateProductForm() {
         formData.append('model', model);
       }
       files.forEach((file) => {
+        if (file.upload_id) {
+          formData.append('images', file.upload_id);
+          return;
+        }
         if (file.data) {
           formData.append('images', file.data);
         }
@@ -111,6 +152,7 @@ export default function CreateProductForm() {
       const newData = files.map((file, key) => {
         if (key === currentKey) {
           return {
+            name: newFile.name,
             value: e.target.value,
             data: newFile,
             url: URL.createObjectURL(newFile),
@@ -148,8 +190,10 @@ export default function CreateProductForm() {
           !!state.errors?.name &&
           state.errors.name.map((error: string) => <p key={error}>{error}</p>)
         }
+        defaultValue={product.name}
       />
       <Textarea
+        defaultValue={product.description}
         variant='bordered'
         name='description'
         label='Description'
@@ -164,6 +208,7 @@ export default function CreateProductForm() {
       />
       <SelectCategory
         name='category'
+        defaultValue={product.category}
         errorMessage={
           !!state.errors?.category &&
           state.errors.category.map((error: string) => (
@@ -186,6 +231,7 @@ export default function CreateProductForm() {
             labelPlacement='outside'
             radius='sm'
             name='weight'
+            defaultValue={product.weight.value.toString()}
             errorMessage={
               !!state.errors?.weight &&
               state.errors.weight.map((error: string) => (
@@ -200,6 +246,7 @@ export default function CreateProductForm() {
                 <span className='text-default-400 text-small'>cm</span>
               </div>
             }
+            defaultValue={product.dimension.width.toString()}
             label='Width'
             type='number'
             placeholder='Enter Product Width'
@@ -222,6 +269,7 @@ export default function CreateProductForm() {
                 <span className='text-default-400 text-small'>cm</span>
               </div>
             }
+            defaultValue={product.dimension.length.toString()}
             label='Length'
             type='number'
             placeholder='Enter Product Length'
@@ -244,6 +292,7 @@ export default function CreateProductForm() {
                 <span className='text-default-400 text-small'>cm</span>
               </div>
             }
+            defaultValue={product.dimension.height.toString()}
             type='number'
             label='Height'
             placeholder='Enter Product Height'
@@ -279,11 +328,11 @@ export default function CreateProductForm() {
                 'border border-black rounded-md border-solid': !!file.data,
               })}
             >
-              {file.data ? (
+              {file.name ? (
                 <div className='group w-full h-full relative'>
                   <Image
                     src={file.url}
-                    alt={file.data.name}
+                    alt={file.name}
                     fill
                     className='object-contain'
                     priority={true}
@@ -326,6 +375,11 @@ export default function CreateProductForm() {
       </div>
       <div className='flex flex-col gap-4'>
         <span className='text-sm'>Product Model</span>
+        {!!product.model && (
+          <span className='text-sm'>
+            model: {model?.name ?? product.model.name}
+          </span>
+        )}
         <input
           type='file'
           className='border-2 cursor-pointer border-foreground-200 hover:shadow-sm hover:border-foreground-400 border-solid rounded-md p-3'
@@ -345,45 +399,25 @@ export default function CreateProductForm() {
           </span>
         )}
       </div>
-      <div className='flex gap-4 w-full items-start'>
-        <Switch
-          value='true'
-          classNames={{
-            base: cn(
-              'inline-flex flex-row-reverse w-full max-w-full bg-content1 hover:bg-content2 items-center',
-              'justify-between cursor-pointer rounded-lg gap-2 p-4 border-2 border-foreground-600',
-              'data-[selected=true]:border-primary'
-            ),
-            wrapper: 'p-0 h-4 overflow-visible bg-foreground-600',
-            thumb: cn(
-              'w-6 h-6 border-2 shadow-lg border-foreground-600',
-              'group-data-[hover=true]:border-primary',
-              //selected
-              'group-data-[selected=true]:ml-6',
-              // pressed
-              'group-data-[pressed=true]:w-7',
-              'group-data-[selected]:group-data-[pressed]:ml-4'
-            ),
-          }}
-          name='featured'
-        >
-          <div className='flex flex-col gap-1'>
-            <p className='text-medium'>Featured Product</p>
-            <p className='text-tiny text-default-600'>
-              tetapkan produk sebagai produk unggulan
-            </p>
-          </div>
-        </Switch>
-        <div className='flex flex-col gap-1'>
+      <div className='flex flex-col gap-1 w-full'>
+        {state.errors?.variant && (
+          <span className='flex flex-col gap-1 text-small text-danger'>
+            {state.errors.variant.map((error: string) => (
+              <p key={error}>{error}</p>
+            ))}
+          </span>
+        )}
+        {state.errors?.selections && (
+          <span className='flex flex-col gap-1 text-small text-danger'>
+            {state.errors.selections.map((error: string) => (
+              <p key={error}>{error}</p>
+            ))}
+          </span>
+        )}
+        <div className='flex gap-4 w-full items-start'>
           <Switch
-            isSelected={customizable}
-            onValueChange={(isSelected) => {
-              setCustomizable(isSelected);
-              if (!isSelected) {
-                setSelections([]);
-                setVariants([]);
-              }
-            }}
+            defaultChecked={product.featured}
+            value='true'
             classNames={{
               base: cn(
                 'inline-flex flex-row-reverse w-full max-w-full bg-content1 hover:bg-content2 items-center',
@@ -401,33 +435,48 @@ export default function CreateProductForm() {
                 'group-data-[selected]:group-data-[pressed]:ml-4'
               ),
             }}
-            name='customizable'
+            name='featured'
           >
             <div className='flex flex-col gap-1'>
-              <p className='text-medium'>Customization</p>
-              <p className='text-tiny text-default-400'>
-                jika produk dapat disesuaiakan, maka produk akan ditetapkan
-                sebagai pre-order dan memiliki lebih dari satu varian
+              <p className='text-medium'>Featured Product</p>
+              <p className='text-tiny text-default-600'>
+                tetapkan produk sebagai produk unggulan
               </p>
             </div>
           </Switch>
-          {state.errors?.variant && (
-            <span className='flex flex-col gap-1 text-small text-danger'>
-              {state.errors.variant.map((error: string) => (
-                <p key={error}>{error}</p>
-              ))}
-            </span>
-          )}
-          {state.errors?.selections && (
-            <span className='flex flex-col gap-1 text-small text-danger'>
-              {state.errors.selections.map((error: string) => (
-                <p key={error}>{error}</p>
-              ))}
-            </span>
-          )}
+          <Switch
+            defaultChecked={product.available}
+            value='true'
+            classNames={{
+              base: cn(
+                'inline-flex flex-row-reverse w-full max-w-full bg-content1 hover:bg-content2 items-center',
+                'justify-between cursor-pointer rounded-lg gap-2 p-4 border-2 border-foreground-600',
+                'data-[selected=true]:border-primary'
+              ),
+              wrapper: 'p-0 h-4 overflow-visible bg-foreground-600',
+              thumb: cn(
+                'w-6 h-6 border-2 shadow-lg border-foreground-600',
+                'group-data-[hover=true]:border-primary',
+                //selected
+                'group-data-[selected=true]:ml-6',
+                // pressed
+                'group-data-[pressed=true]:w-7',
+                'group-data-[selected]:group-data-[pressed]:ml-4'
+              ),
+            }}
+            name='available'
+          >
+            <div className='flex flex-col gap-1'>
+              <p className='text-medium'>Available</p>
+              <p className='text-tiny text-default-600'>
+                tetapkan ketersediaan produk
+              </p>
+            </div>
+          </Switch>
         </div>
       </div>
-      {!customizable ? (
+
+      {!product.customizable ? (
         <>
           <Input
             variant='bordered'
@@ -442,6 +491,7 @@ export default function CreateProductForm() {
             labelPlacement='outside'
             radius='sm'
             name='price'
+            defaultValue={product.variant[0].price.toString()}
             errorMessage={
               !!state.errors?.price &&
               state.errors.price.map((error: string) => (
@@ -457,6 +507,7 @@ export default function CreateProductForm() {
             labelPlacement='outside'
             radius='sm'
             name='stock'
+            defaultValue={product.variant[0].stock?.toString()}
             errorMessage={
               !!state.errors?.stock &&
               state.errors.stock.map((error: string) => (
@@ -644,7 +695,7 @@ export default function CreateProductForm() {
                         min={1000}
                         errorMessage={
                           variant.price < 1000 && (
-                            <p>price must be 1000 or more</p>
+                            <p>Price must be greater than or equal to 1000</p>
                           )
                         }
                       />

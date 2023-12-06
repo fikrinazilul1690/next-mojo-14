@@ -4,6 +4,7 @@ import {
   Bank,
   CartItem,
   Category,
+  Color,
   DetailPayment,
   Item,
   ListAddresses,
@@ -197,4 +198,30 @@ export async function fetchLocations(
   }
 
   return json.data;
+}
+
+export async function fetchNtcColors(name: string): Promise<Color[]> {
+  const response = await fetch(
+    `https://api.color.pizza/v1/names/?list=ntc&name=${name}`,
+    {
+      method: 'GET',
+      next: {
+        tags: ['color'],
+      },
+      cache: 'force-cache',
+    }
+  );
+  const json = await response.json();
+  if (!response.ok) {
+    throw (
+      json as {
+        error: { status: number; message: string };
+      }
+    ).error;
+  }
+  return (
+    json as {
+      colors: Color[];
+    }
+  ).colors;
 }

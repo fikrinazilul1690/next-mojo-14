@@ -25,7 +25,7 @@ export function Slogan({ Icon, title, body }: Params) {
 
 export default function ListSlogan() {
   return (
-    <div className='h-fit sm:h-[314px] mt-5 mb-3 flex flex-col sm:flex-row sm:justify-between justify-center items-center'>
+    <div className='h-fit sm:h-[214px] mt-5 mb-3 flex flex-col sm:flex-row sm:justify-between justify-center items-center'>
       <Slogan
         Icon='ribbon'
         title='Best Quality Product'

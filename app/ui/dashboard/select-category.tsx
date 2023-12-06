@@ -2,14 +2,24 @@
 import { fetchCategoreis } from '@/app/lib/client-data';
 import { Autocomplete, AutocompleteItem } from '@nextui-org/autocomplete';
 import { useQuery } from '@tanstack/react-query';
+import { ReactNode } from 'react';
 
-export default function SelectCategory() {
+export default function SelectCategory({
+  name,
+  errorMessage,
+  defaultValue,
+}: {
+  name: string;
+  errorMessage?: ReactNode;
+  defaultValue?: string;
+}) {
   const { data: categories, isLoading } = useQuery({
     queryKey: ['category'],
     queryFn: fetchCategoreis,
   });
   return (
     <Autocomplete
+      variant='bordered'
       fullWidth
       label='Category'
       radius='sm'
@@ -18,6 +28,9 @@ export default function SelectCategory() {
       placeholder='Enter Product Category'
       allowsCustomValue
       items={categories ?? []}
+      name={name}
+      errorMessage={errorMessage}
+      defaultInputValue={defaultValue}
     >
       {(category) => (
         <AutocompleteItem key={category.name} value={category.name}>

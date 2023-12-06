@@ -25,8 +25,8 @@ export default function ProductDetail({
       radius='none'
     >
       <CardHeader className='p-0 flex-col items-start'>
-        <div className='w-full flex justify-between items-center'>
-          <h1 className='text-3xl font-bold'>{productName}</h1>
+        <div className='w-full flex justify-between items-start'>
+          <h1 className='text-3xl font-bold w-3/4'>{productName}</h1>
           {children}
         </div>
         <span>Category: {product.category}</span>

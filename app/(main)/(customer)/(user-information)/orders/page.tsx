@@ -1,7 +1,7 @@
 import ListOrder from '@/app/ui/order/list-order';
 import OrderStatusFilter from '@/app/ui/order/order-filter';
 import { OrderInfoCard } from '@/app/ui/order/order-info-card';
-import React from 'react';
+import React, { Suspense } from 'react';
 
 export default function Page({
   searchParams,
@@ -18,7 +18,9 @@ export default function Page({
         <OrderStatusFilter status={status} />
       </div>
       {/* order linst */}
-      <ListOrder status={searchParams.status} />
+      <Suspense key={status} fallback={<div>Loading...</div>}>
+        <ListOrder status={searchParams.status} />
+      </Suspense>
     </div>
   );
 }

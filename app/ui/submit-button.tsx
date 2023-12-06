@@ -5,6 +5,7 @@ import { ReactNode } from 'react';
 import { useFormStatus } from 'react-dom';
 
 export function SubmitButton({
+  size,
   className,
   color,
   variant,
@@ -41,11 +42,13 @@ export function SubmitButton({
   startContent?: ReactNode;
   endContent?: ReactNode;
   radius?: 'none' | 'sm' | 'md' | 'lg' | 'full';
+  size?: 'sm' | 'md' | 'lg';
 }) {
   const { pending } = useFormStatus();
 
   return (
     <Button
+      size={size}
       fullWidth={fullWidth}
       formAction={formAction}
       type='submit'

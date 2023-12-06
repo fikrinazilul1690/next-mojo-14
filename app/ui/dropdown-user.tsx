@@ -114,6 +114,14 @@ export default function DropdownUser({ user }: { user: User }) {
                   <p className='font-semibold'>{user.name}</p>
                 </ListboxItem>
                 <ListboxItem
+                  key='settings'
+                  textValue='Settings'
+                  startContent={<LuSettings size={24} />}
+                  href='/settings'
+                >
+                  Settings
+                </ListboxItem>
+                <ListboxItem
                   key='dashboard'
                   textValue='Dashboard'
                   startContent={<MdDashboardCustomize size={24} />}

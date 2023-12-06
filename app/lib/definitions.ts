@@ -6,6 +6,16 @@ export type APIResponse<T, ErrorResponse> = {
   errors: ErrorResponse;
 };
 
+export type Color = {
+  name: string;
+  hex: string;
+};
+
+export type WikisColors = {
+  paletteTitle: string;
+  colors: Color[];
+};
+
 export type APIMetadata = {
   offset: number | null;
   limit: number | null;
@@ -45,6 +55,24 @@ export type UpdateProfileError = {
   phone?: string[];
   gender?: string[];
   birthdate?: string[];
+};
+
+export type ProductError = {
+  message?: string;
+  name?: string[];
+  description?: string[];
+  category?: string[];
+  dimension?: string[];
+  weight?: string[];
+  available?: string[];
+  featured?: string[];
+  customizable?: string[];
+  stock?: string[];
+  price?: string[];
+  selections?: string[];
+  variant?: string[];
+  model?: string[];
+  images?: string[];
 };
 
 export type User = {
@@ -99,31 +127,63 @@ export type Variant = {
   price: number;
 };
 
-export type CreateProductRequest = {
-  name?: string;
-  description?: string;
-  category?: string;
-  dimension?: {
-    length?: number;
-    width?: number;
-    height?: number;
-    unit?: 'cm' | 'dm';
+export type CreateProductRequest =
+  | CreatePreOrderProduct
+  | CreateReadyStockProduct;
+
+export type CreateReadyStockProduct = {
+  name: string;
+  description: string;
+  category: string;
+  dimension: {
+    length: number;
+    width: number;
+    height: number;
+    unit: 'cm' | 'dm';
   };
-  weight?: {
-    value?: number;
-    unit?: 'kg' | 'gr';
+  weight: {
+    value: number;
+    unit: 'kg' | 'gr';
   };
-  available?: boolean;
-  featured?: boolean;
-  customizable?: boolean;
-  price?: number;
-  stock?: number;
-  images?: UploadImageRequest[];
-  model?: {
-    upload_id?: string;
+  available: boolean;
+  featured: boolean;
+  customizable: false;
+  price: number;
+  stock: number;
+  images: UploadImageRequest[];
+  model: {
+    upload_id: string;
   };
-  selections?: VariantSelection[];
-  variants?: Variant[];
+};
+
+export type CreatePreOrderProduct = {
+  name: string;
+  description: string;
+  category: string;
+  dimension: {
+    length: number;
+    width: number;
+    height: number;
+    unit: 'cm' | 'dm';
+  };
+  weight: {
+    value: number;
+    unit: 'kg' | 'gr';
+  };
+  available: boolean;
+  featured: boolean;
+  customizable: true;
+  images: UploadImageRequest[];
+  model: {
+    upload_id: string;
+  };
+  selections: VariantSelection[];
+  variants: Required<Omit<Variant, 'sku' | 'stock'>>[];
+};
+
+export type ProductSoldStat = {
+  month: string;
+  total_product_sold: number;
 };
 
 export type RegisterRequest = {

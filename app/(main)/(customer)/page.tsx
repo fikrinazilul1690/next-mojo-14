@@ -36,7 +36,8 @@ export default async function Page({
         />
       </div>
       <div className='max-w-[980px] mx-auto'>
-        <div className='mb-[43px] mt-[69px] flex justify-between items-center max-sm:gap-4 max-sm:mx-3'>
+        <ListSlogan />
+        <div className='mb-[43px] flex justify-between items-center max-sm:gap-4 max-sm:mx-3'>
           <h3 className='text-xl font-bold'>Featured Products</h3>
           <CategoryFilter
             category={category}
@@ -64,10 +65,9 @@ export default async function Page({
             variant='flat'
           />
         </div>
-        <ListSlogan />
         <Card
           radius='lg'
-          className='grid sm:grid-cols-4 max-sm:mx-2 sm:px-14 sm:grid-rows-3 items-center justify-center bg-gradient-to-r from-[#326373] from-0% to-[#11B1E3] to-100% hover:from-[#11B1E3] hover:from-0% hover:to-[#326373] hover:to-100%'
+          className='mt-5 grid sm:grid-cols-4 max-sm:mx-2 sm:px-14 sm:grid-rows-3 items-center justify-center bg-gradient-to-r from-[#326373] from-0% to-[#11B1E3] to-100% hover:from-[#11B1E3] hover:from-0% hover:to-[#326373] hover:to-100%'
           isHoverable
           isPressable
           as={Link}
