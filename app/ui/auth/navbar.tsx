@@ -66,7 +66,7 @@ export default function Navbar() {
             </Link>
           </NavbarItem>
           <NavbarItem isActive={pathname === '/about-us'}>
-            <Link color='foreground' href='/settings'>
+            <Link color='foreground' href='/about-us'>
               About Us
             </Link>
           </NavbarItem>
