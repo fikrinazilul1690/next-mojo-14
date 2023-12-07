@@ -20,6 +20,10 @@ export default async function Page({
         <div className='w-1/2 flex flex-col gap-3'>
           <div className='w-full flex flex-col gap-2'>
             <div className='text-sm flex justify-between'>
+              <span className='text-foreground-400'>Order ID :</span>
+              <span className='font-bold'>{detailOrder.id.toUpperCase()}</span>
+            </div>
+            <div className='text-sm flex justify-between'>
               <span className='text-foreground-400'>Status :</span>
               <span className='font-bold'>
                 {detailOrder.status.replaceAll('_', ' ')}

@@ -26,7 +26,7 @@ export default async function Page({
     <div className='flex flex-col gap-3 items-center justify-center w-full'>
       <div className='flex justify-between items-center w-full'>
         <h3 className='text-xl font-semibold'>List Orders</h3>
-        <OrderStatusFilter status={status} />
+        <OrderStatusFilter className='w-2/5' status={status} />
       </div>
       {/* order linst */}
       <Suspense key={status} fallback={<div>Loading...</div>}>

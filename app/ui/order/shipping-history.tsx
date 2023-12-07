@@ -65,7 +65,7 @@ export function ShippingHistory({
           classNames={{ content: 'font-medium' }}
           variant='bordered'
         >
-          {shippingHistory.status}
+          {shippingHistory.status.replaceAll('_', ' ')}
         </Chip>
         <span className='font-bold'>{shippingHistory.note}</span>
       </div>

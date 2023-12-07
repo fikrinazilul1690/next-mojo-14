@@ -2,6 +2,7 @@ import { OrderInfo } from '@/app/lib/definitions';
 import { formatDateWithTime, formatIDR } from '@/app/lib/utils';
 import { Card, CardHeader, CardBody } from '@nextui-org/card';
 import { Divider } from '@nextui-org/divider';
+import { Chip } from '@nextui-org/chip';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -16,10 +17,17 @@ export function OrderInfoCard({ orderInfo }: { orderInfo: OrderInfo }) {
       fullWidth
       shadow='sm'
     >
-      <CardHeader className='pb-0'>
-        <span className='text-sm text-foreground-400'>
-          {formatDateWithTime(new Date(orderInfo.created_at))}
-        </span>
+      <CardHeader className='pb-0 justify-between items-start'>
+        <div className='flex flex-col items-start gap-1'>
+          <span className='text-sm text-foreground-400'>
+            {formatDateWithTime(new Date(orderInfo.created_at))}
+          </span>
+          <span className='text-sm font-semibold text-foreground-500'>
+            Order ID: {orderInfo.id.toUpperCase()}
+          </span>
+        </div>
+
+        <Chip>{orderInfo.status.replaceAll('_', ' ')}</Chip>
       </CardHeader>
       <CardBody className='flex-row h-40 justify-between items-start'>
         <div className='flex w-1/2 h-full items-center gap-x-2'>

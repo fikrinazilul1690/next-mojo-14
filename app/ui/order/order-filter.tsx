@@ -58,7 +58,7 @@ export default function OrderStatusFilter({
       className={`gap-1 justify-center ${className}`}
       classNames={{
         wrapper:
-          'max-sm:justify-start flex-nowrap max-sm:overflow-x-scroll overflow-hidden',
+          'max-sm:justify-start flex-nowrap overflow-x-auto overflow-y-hidden px-3 pb-1',
       }}
       orientation='horizontal'
       value={status ?? 'all'}

@@ -17,6 +17,7 @@ import { RequestPickUp } from './orders-button';
 import { requestPickUp } from '@/app/lib/actions';
 
 const columns = [
+  { name: 'Order ID', uid: 'id' },
   { name: 'Items', uid: 'item' },
   { name: 'Buyyer', uid: 'buyyer' },
   { name: 'Status', uid: 'status' },
@@ -39,6 +40,7 @@ export default function OrdersTableClient({ orders }: { orders: OrderInfo[] }) {
       <TableBody emptyContent={'No rows to display.'} items={optimisticOrders}>
         {(order) => (
           <TableRow key={order.id}>
+            <TableCell>{order.id.toUpperCase()}</TableCell>
             <TableCell>
               <div className='mb-2 flex items-center'>
                 <Image
@@ -69,15 +71,19 @@ export default function OrdersTableClient({ orders }: { orders: OrderInfo[] }) {
             </TableCell>
             <TableCell>
               {order.status === 'on_progress' && (
-                <RequestPickUp action={async () => {
-                  updateOptimisticOrders((pendingState => pendingState.map(state => {
-                    if (state.id === order.id) {
-                      state.status = 'confirmed'
-                    }
-                    return state
-                  })))
-                  await requestPickUp(order.id)
-                }} />
+                <RequestPickUp
+                  action={async () => {
+                    updateOptimisticOrders((pendingState) =>
+                      pendingState.map((state) => {
+                        if (state.id === order.id) {
+                          state.status = 'confirmed';
+                        }
+                        return state;
+                      })
+                    );
+                    await requestPickUp(order.id);
+                  }}
+                />
               )}
             </TableCell>
           </TableRow>

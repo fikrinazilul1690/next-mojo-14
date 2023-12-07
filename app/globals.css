@@ -19,6 +19,7 @@ input[type='number']:not(.number-control)::-webkit-outer-spin-button {
 
 ::-webkit-scrollbar {
   width: 10px;
+  height: 5px;
 }
 
 /* Track */
