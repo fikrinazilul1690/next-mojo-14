@@ -17,6 +17,7 @@ export const authConfig = {
   providers: [],
   pages: {
     signIn: '/login',
+    error: '/login',
   },
   callbacks: {
     async authorized({ auth, request: { nextUrl } }) {

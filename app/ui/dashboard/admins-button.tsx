@@ -53,7 +53,7 @@ export function DeleteAdmin({
                 Delete Admin
               </ModalHeader>
               <ModalBody>
-                <p>Are you sure want to delete {user?.name}'s account ?</p>
+                <p>Are you sure want to delete {user?.name}&apos;s account ?</p>
               </ModalBody>
               <ModalFooter>
                 <Button color='default' variant='light' onPress={onClose}>

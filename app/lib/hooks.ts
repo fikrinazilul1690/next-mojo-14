@@ -46,7 +46,7 @@ const useVariants = (
     if (customization) {
       generateVariants(selections, setVariants);
     }
-  }, [selections, initialized.current, customization]);
+  }, [selections, customization]);
 
   return { variants, setVariants };
 };

@@ -27,7 +27,7 @@ async function login({
     return undefined;
   }
   if (json.code !== 200) {
-    throw json.status;
+    throw new Error(json.errors.message);
   }
   return json.data;
 }
@@ -48,22 +48,17 @@ export const {
 
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
-          try {
-            const data = await login({ email, password });
-            if (!data) return null;
-
-            return {
-              id: data.user.id,
-              email: data.user.email,
-              name: data.user.name,
-              role: data.user.role,
-              accessToken: data.access_token,
-              refreshToken: data.refresh_token,
-              image: data.user.profile_picture?.url,
-            };
-          } catch (error) {
-            throw error;
-          }
+          const data = await login({ email, password });
+          if (!data) return null;
+          return {
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.name,
+            role: data.user.role,
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+            image: data.user.profile_picture?.url,
+          };
         }
 
         return null;

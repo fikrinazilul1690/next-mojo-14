@@ -7,6 +7,7 @@ import { useFormState } from 'react-dom';
 import { authenticate } from '@/app/lib/actions';
 import toast from 'react-hot-toast';
 import { SubmitButton } from '../submit-button';
+import { useSearchParams } from 'next/navigation';
 
 type Props = {
   className: string;
@@ -18,12 +19,20 @@ export default function LoginForm({ className, callbackURL }: Props) {
   const logitWithCallbackUrl = authenticate.bind(null, callbackURL);
   const [state, action] = useFormState(logitWithCallbackUrl, initialState);
   const [isVisible, setIsVisible] = useState(false);
+  const searchParams = useSearchParams();
+  const error = searchParams.get('error');
 
   useEffect(() => {
     if (!!state.message) {
       toast.error(state.message);
     }
   }, [state]);
+
+  useEffect(() => {
+    if (!!error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   return (
     <div className='flex flex-col gap-3 justify-center'>

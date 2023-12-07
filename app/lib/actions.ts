@@ -70,12 +70,10 @@ export async function authenticate(
           message: 'Invalid credentials',
         };
       }
-      if (error.message.includes('CallbackRouteError')) {
-        return {
-          message: 'Something wrong',
-        };
-      }
     }
+    return {
+      message: 'something went wrong, please try again !',
+    };
   }
 
   redirect(redirectTo);
