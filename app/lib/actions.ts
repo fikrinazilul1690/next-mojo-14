@@ -488,20 +488,13 @@ export async function createAddress(
     return out;
   }
 
-  const session = await auth();
-  if (!session) {
-    return {
-      data: null,
-      message: 'authorization header is not provided',
-    };
-  }
-
   try {
+    const session = await auth();
     const response = await fetch(`${baseUrl}/users/addresses`, {
       method: 'POST',
       body: JSON.stringify({ ...validatedFields.data, ...location }),
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session?.accessToken}`,
       },
     });
 

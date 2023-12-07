@@ -11,6 +11,7 @@ import { useAddress } from '@/app/context/address-provider';
 import { ListAddresses } from '@/app/lib/definitions';
 import { deleteAddress, selectPrimaryAddress } from '@/app/lib/actions';
 import { useShipping } from '@/app/context/shipping-provider';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function ModalAddressConfirm({
   onOpenChange,
@@ -23,8 +24,11 @@ export default function ModalAddressConfirm({
     action: ListAddresses | ((pendingState: ListAddresses) => ListAddresses)
   ) => void;
 }) {
+  const queryClient = useQueryClient();
   const addressStore = useAddress();
   const setAddressId = useShipping()((state) => state.setAddressId);
+  const resetShipping = useShipping()((state) => state.reset);
+  const addressId = useShipping()((state) => state.addressId);
   const actionType = addressStore((state) => state.actionType);
   const address = addressStore((state) => state.address);
   return (
@@ -64,7 +68,13 @@ export default function ModalAddressConfirm({
                           (currentAddress) => currentAddress.id !== address.id
                         )
                       );
+                      if (address.id === addressId) {
+                        resetShipping();
+                      }
                       await deleteAddress(address.id);
+                      await queryClient.invalidateQueries({
+                        queryKey: ['address'],
+                      });
                     }
                   }}
                 >
@@ -90,6 +100,9 @@ export default function ModalAddressConfirm({
                       );
                       setAddressId(address.id);
                       await selectPrimaryAddress(address.id);
+                      await queryClient.invalidateQueries({
+                        queryKey: ['address'],
+                      });
                     }
                   }}
                 >
