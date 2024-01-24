@@ -12,7 +12,7 @@ import {
   RateResponse,
 } from "./definitions";
 
-const baseUrl = "https://toko-mojopahit-production.up.railway.app/v1";
+const baseUrl = "https://toko-mojopahit-production-8a47.up.railway.app/v1";
 
 export async function fetchCart(
   accessToken: string | null,

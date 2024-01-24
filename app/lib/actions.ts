@@ -13,6 +13,7 @@ import {
   FileResponse,
   Item,
   Location,
+  OrderInfo,
   ProductError,
   RegisterAdminError,
   RegisterError,

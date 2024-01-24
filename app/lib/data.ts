@@ -16,13 +16,14 @@ import type {
   ProductSoldStat,
 } from "./definitions";
 import { Session } from "next-auth";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { decrypt } from "./crypto";
 import { formatIDR } from "./utils";
 import { headers } from "next/headers";
 
-export const baseUrl = "https://toko-mojopahit-production.up.railway.app/v1";
+export const baseUrl =
+  "https://toko-mojopahit-production-8a47.up.railway.app/v1";
 
 export async function fetchStore(): Promise<
   APIResponse<StoreInformation, { message: string }>
@@ -692,6 +693,10 @@ export async function fetchWikipediasColors(): Promise<Color[]> {
 }
 
 export async function fetchCardData() {
+  const Authorization = headers().get("Authorization") ?? "";
+  if (!Authorization) {
+    redirect("/login");
+  }
   try {
     const data = await Promise.all([
       fetchTotalSuccessPayment(),

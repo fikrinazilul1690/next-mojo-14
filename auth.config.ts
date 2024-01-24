@@ -24,7 +24,7 @@ function isAuthenticated(pathname: string, role?: string): boolean {
   return true;
 }
 
-const baseUrl = "https://toko-mojopahit-production.up.railway.app/v1";
+const baseUrl = "https://toko-mojopahit-production-8a47.up.railway.app/v1";
 
 async function refreshAccessToken(
   refreshToken: string,
