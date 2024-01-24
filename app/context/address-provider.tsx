@@ -1,10 +1,9 @@
-'use client';
-import { useDisclosure } from '@nextui-org/react';
-import { useState, createContext, useContext } from 'react';
-import { create } from 'zustand';
-import { CustomerAddress } from '../lib/definitions';
+"use client";
+import { useState, createContext, useContext } from "react";
+import { create } from "zustand";
+import { CustomerAddress } from "../lib/definitions";
 
-type AddressActionType = 'update' | 'delete';
+type AddressActionType = "update" | "delete";
 
 type State = {
   address: CustomerAddress | null;
@@ -38,12 +37,12 @@ export const createStore = () =>
   }));
 
 const AddressContext = createContext<ReturnType<typeof createStore> | null>(
-  null
+  null,
 );
 
 export const useAddress = () => {
   if (!AddressContext)
-    throw new Error('useAddress must be used within a AddressProvider');
+    throw new Error("useAddress must be used within a AddressProvider");
   return useContext(AddressContext)!;
 };
 

@@ -1,8 +1,8 @@
-'use server';
+"use server";
 
-import { auth, signIn, signOut } from '@/auth';
-import { redirect } from 'next/navigation';
-import z from 'zod';
+import { signIn, signOut } from "@/auth";
+import { redirect } from "next/navigation";
+import z from "zod";
 import {
   APIResponse,
   ChangePasswordError,
@@ -21,11 +21,12 @@ import {
   UploadResponse,
   User,
   Variant,
-} from './definitions';
-import { baseUrl } from './data';
-import { revalidatePath, revalidateTag } from 'next/cache';
-import { encrypt } from './crypto';
-import { Session } from 'next-auth';
+} from "./definitions";
+import { baseUrl } from "./data";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { encrypt } from "./crypto";
+import { AuthError } from "next-auth";
+import { headers } from "next/headers";
 
 const LoginSchema = z.object({
   email: z.string().email(),
@@ -43,10 +44,10 @@ export type LoginState = {
 export async function authenticate(
   redirectTo: string,
   prevState: LoginState,
-  formData: FormData
+  formData: FormData,
 ) {
   const validatedFields = LoginSchema.safeParse(
-    Object.fromEntries(formData.entries())
+    Object.fromEntries(formData.entries()),
   );
 
   if (!validatedFields.success) {
@@ -58,22 +59,22 @@ export async function authenticate(
   const { email, password } = validatedFields.data;
 
   try {
-    await signIn('credentials', {
+    await signIn("credentials", {
       email,
       password,
       redirect: false,
     });
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes('CredentialsSignin')) {
-        return {
-          message: 'Invalid credentials',
-        };
+    if (error instanceof AuthError) {
+      // console.log(error.type);
+      switch (error.type) {
+        case "CredentialsSignin":
+          return { message: "Invalid credentials." };
+        default:
+          return { message: "Something went wrong." };
       }
     }
-    return {
-      message: 'something went wrong, please try again !',
-    };
+    throw error;
   }
 
   redirect(redirectTo);
@@ -84,14 +85,14 @@ const RegisterSchema = z
     name: z.string().min(3),
     email: z.string().email(),
     phone: z.string().regex(/^(\+62|62|0)8[1-9][0-9]{6,9}$/, {
-      message: 'Invalid phone number',
+      message: "Invalid phone number",
     }),
     password: z.string().min(8),
     confirm_password: z.string(),
   })
   .refine((schema) => schema.password === schema.confirm_password, {
-    message: 'Confirm password not match',
-    path: ['confirm_password'],
+    message: "Confirm password not match",
+    path: ["confirm_password"],
   });
 
 export type RegisterState = {
@@ -101,7 +102,7 @@ export type RegisterState = {
 
 export async function register(prevState: RegisterState, formData: FormData) {
   const validatedFields = RegisterSchema.safeParse(
-    Object.fromEntries(formData.entries())
+    Object.fromEntries(formData.entries()),
   );
 
   if (!validatedFields.success) {
@@ -110,11 +111,11 @@ export async function register(prevState: RegisterState, formData: FormData) {
     };
   }
 
-  console.log('register run...');
+  // console.log("register run...");
 
   try {
     const response = await fetch(`${baseUrl}/auth/register`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ ...validatedFields.data }),
     });
 
@@ -127,9 +128,9 @@ export async function register(prevState: RegisterState, formData: FormData) {
       throw data.errors;
     }
 
-    console.log('response: ', response);
+    // console.log("response: ", response);
   } catch (error) {
-    console.log('error :', error);
+    console.log("error :", error);
     const registerError = error as RegisterError;
     if (registerError.message) {
       return {
@@ -147,7 +148,7 @@ export async function register(prevState: RegisterState, formData: FormData) {
     };
   }
 
-  redirect('/login');
+  redirect("/login");
 }
 
 export async function logout() {
@@ -157,18 +158,18 @@ export async function logout() {
 export async function toogleWishlist(
   callbackUrl: string,
   isExist: boolean,
-  sku: string
+  sku: string,
 ) {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const params = new URLSearchParams();
-  params.set('callbackUrl', callbackUrl);
-  if (!session) redirect('/login?' + callbackUrl);
+  params.set("callbackUrl", callbackUrl);
+  if (!Authorization) redirect("/login?" + params);
   try {
     if (isExist) {
       const response = await fetch(`${baseUrl}/wishlist/${sku}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization,
         },
       });
       const json = await response.json();
@@ -178,10 +179,10 @@ export async function toogleWishlist(
       }
     } else {
       const response = await fetch(`${baseUrl}/wishlist`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({ sku }),
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization,
         },
       });
 
@@ -192,19 +193,19 @@ export async function toogleWishlist(
       }
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
   } finally {
-    revalidatePath('wishlist');
+    revalidatePath("wishlist");
   }
 }
 
 const CartActionSchema = z.object({
-  sku: z.string().min(1, { message: 'sku is required' }),
+  sku: z.string().min(1, { message: "sku is required" }),
   quantity: z.coerce.number(),
 });
 
 export type CartActionState = {
-  status: 'iddle' | 'success' | 'error';
+  status: "iddle" | "success" | "error";
   message: string | null;
 };
 
@@ -212,21 +213,21 @@ export async function addToCart(
   callbackUrl: string,
   sku: string,
   prevState: CartActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<CartActionState> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization");
   const params = new URLSearchParams();
-  params.set('callbackUrl', callbackUrl);
-  if (!session) redirect('/login?' + callbackUrl);
+  params.set("callbackUrl", callbackUrl);
+  if (!Authorization) redirect("/login?" + params);
   const data = CartActionSchema.parse({
     sku,
-    quantity: formData.get('quantity') as string,
+    quantity: formData.get("quantity") as string,
   });
   try {
     const response = await fetch(`${baseUrl}/carts`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization,
       },
       body: JSON.stringify(data),
     });
@@ -236,8 +237,8 @@ export async function addToCart(
       throw new Error(JSON.stringify(json));
     }
     return {
-      status: 'success',
-      message: 'Produk berhasil ditambahkan ke keranjang',
+      status: "success",
+      message: "Produk berhasil ditambahkan ke keranjang",
     };
   } catch (error) {
     if (error instanceof Error) {
@@ -246,33 +247,33 @@ export async function addToCart(
         { message: string }
       >;
       return {
-        status: 'error',
+        status: "error",
         message: json.errors.message,
       };
     }
     return {
-      status: 'error',
-      message: 'Something gone wrong!',
+      status: "error",
+      message: "Something gone wrong!",
     };
   } finally {
-    revalidateTag('cart');
+    revalidateTag("cart");
   }
 }
 
 export async function addToCartFromWishlist(
   prevState: CartActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<CartActionState> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const data = CartActionSchema.parse({
-    sku: formData.get('sku') as string,
-    quantity: formData.get('quantity') as string,
+    sku: formData.get("sku") as string,
+    quantity: formData.get("quantity") as string,
   });
   try {
     const response = await fetch(`${baseUrl}/carts`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
       body: JSON.stringify(data),
     });
@@ -282,8 +283,8 @@ export async function addToCartFromWishlist(
       throw new Error(JSON.stringify(json));
     }
     return {
-      status: 'success',
-      message: 'Produk berhasil ditambahkan ke keranjang',
+      status: "success",
+      message: "Produk berhasil ditambahkan ke keranjang",
     };
   } catch (error) {
     if (error instanceof Error) {
@@ -292,23 +293,23 @@ export async function addToCartFromWishlist(
         { message: string }
       >;
       return {
-        status: 'error',
+        status: "error",
         message: json.errors.message,
       };
     }
     return {
-      status: 'error',
-      message: 'Something gone wrong!',
+      status: "error",
+      message: "Something gone wrong!",
     };
   } finally {
-    revalidateTag('cart');
+    revalidateTag("cart");
   }
 }
 
 export async function redirectToSingleCheckout(data: CheckoutItem) {
   const ecryptedData = encrypt(data);
   const params = new URLSearchParams();
-  params.set('token', ecryptedData);
+  params.set("token", ecryptedData);
   redirect(`/checkout?${params}`);
 }
 
@@ -316,27 +317,26 @@ export async function singleCheckout(
   courierService: string,
   addressId: number,
   bank: string,
-  items: Item[]
+  items: Item[],
 ) {
-  const session = await auth();
-  if (!session) redirect('/login');
-  const key = courierService.split('_');
+  const Authorization = headers().get("Authorization") ?? "";
+  const key = courierService.split("_");
   if (key.length !== 2) {
     // handle error invalid courier service
-    throw new Error('Invalid courier service');
+    throw new Error("Invalid courier service");
   }
-  console.log('checkout run...');
-  console.log({
-    courier_company: key[0],
-    courier_type: key[1],
-    address_id: addressId,
-    bank,
-    items,
-  });
+  // console.log("checkout run...");
+  // console.log({
+  //   courier_company: key[0],
+  //   courier_type: key[1],
+  //   address_id: addressId,
+  //   bank,
+  //   items,
+  // });
   const response = await fetch(`${baseUrl}/checkout`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization,
     },
     body: JSON.stringify({
       courier_company: key[0],
@@ -347,12 +347,12 @@ export async function singleCheckout(
     }),
   });
   const json = (await response.json()) as APIResponse<DetailPayment, any>;
-  console.log(json);
+  // console.log(json);
   if (json.code !== 200) {
     throw new Error(JSON.stringify(json));
   }
 
-  revalidateTag('payment');
+  revalidateTag("payment");
   redirect(`/payment/${json.data.id}`);
 }
 
@@ -360,21 +360,20 @@ export async function cartCheckout(
   courierService: string,
   addressId: number,
   bank: string,
-  items: Item[]
+  items: Item[],
 ) {
   const list_skus = items.map<string>((item) => item.sku);
-  const session = await auth();
-  if (!session) redirect('/login');
-  const key = courierService.split('_');
+  const Authorization = headers().get("Authorization") ?? "";
+  const key = courierService.split("_");
   if (key.length !== 2) {
     // handle error invalid courier service
-    throw new Error('Invalid courier service');
+    throw new Error("Invalid courier service");
   }
 
   const response = await fetch(`${baseUrl}/checkout`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization,
     },
     body: JSON.stringify({
       courier_company: key[0],
@@ -391,28 +390,27 @@ export async function cartCheckout(
   }
 
   await fetch(`${baseUrl}/carts/bulk-delete`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization,
     },
     body: JSON.stringify({
       list_skus,
     }),
   });
 
-  revalidateTag('payment-cart');
+  revalidateTag("payment-cart");
 
   redirect(`/payment/${json.data.id}`);
 }
 
 export async function cancelCheckout(paymentId: string) {
-  const session = await auth();
-  if (!session) redirect('/login');
+  const Authorization = headers().get("Authorization") ?? "";
 
   const response = await fetch(`${baseUrl}/payments/${paymentId}/cancel`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+      Authorization,
     },
   });
   const json = (await response.json()) as APIResponse<DetailPayment, any>;
@@ -421,13 +419,13 @@ export async function cancelCheckout(paymentId: string) {
     throw new Error(JSON.stringify(json));
   }
 
-  revalidateTag('payment');
+  revalidateTag("payment");
 }
 
 const CreateAddressSchema = z.object({
   contact_name: z.string().min(3),
   contact_phone: z.string().regex(/^(\+62|62|0)8[1-9][0-9]{6,9}$/, {
-    message: 'Invalid phone number',
+    message: "Invalid phone number",
   }),
   full_address: z.string().min(5),
   note: z.string().optional(),
@@ -435,18 +433,18 @@ const CreateAddressSchema = z.object({
     .string()
     .optional()
     .nullable()
-    .transform((value) => value === 'true'),
+    .transform((value) => value === "true"),
 });
 
 const LocationSchema = z.object(
   {
-    area_id: z.string().min(1, { message: 'area id is required' }),
-    province: z.string().min(1, { message: 'province is required' }),
-    city: z.string().min(1, { message: 'city is required' }),
-    district: z.string().min(1, { message: 'district is required' }),
-    postal_code: z.string().min(1, { message: 'postal code required' }),
+    area_id: z.string().min(1, { message: "area id is required" }),
+    province: z.string().min(1, { message: "province is required" }),
+    city: z.string().min(1, { message: "city is required" }),
+    district: z.string().min(1, { message: "district is required" }),
+    postal_code: z.string().min(1, { message: "postal code required" }),
   },
-  { required_error: 'Location is required' }
+  { required_error: "Location is required" },
 );
 
 export type CreateAddressState = {
@@ -458,11 +456,11 @@ export type CreateAddressState = {
 export async function createAddress(
   location: Location | null,
   prevState: CreateAddressState,
-  formData: FormData
+  formData: FormData,
 ): Promise<CreateAddressState> {
   let out = prevState;
   const validatedFields = CreateAddressSchema.safeParse(
-    Object.fromEntries(formData.entries())
+    Object.fromEntries(formData.entries()),
   );
 
   const validatedLocation = LocationSchema.safeParse(location ?? undefined);
@@ -489,12 +487,12 @@ export async function createAddress(
   }
 
   try {
-    const session = await auth();
+    const Authorization = headers().get("Authorization") ?? "";
     const response = await fetch(`${baseUrl}/users/addresses`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ ...validatedFields.data, ...location }),
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
     });
 
@@ -533,7 +531,7 @@ export async function createAddress(
       },
     };
   } finally {
-    revalidateTag('address');
+    revalidateTag("address");
     return out;
   }
 }
@@ -544,11 +542,11 @@ export async function updateAddress(
   addressId: number,
   location: Location | null,
   prevState: CreateAddressState,
-  formData: FormData
+  formData: FormData,
 ): Promise<CreateAddressState> {
   let out = prevState;
   const validatedFields = UpdateAddressSchema.safeParse(
-    Object.fromEntries(formData.entries())
+    Object.fromEntries(formData.entries()),
   );
 
   const validatedLocation = LocationSchema.safeParse(location ?? undefined);
@@ -562,7 +560,7 @@ export async function updateAddress(
     };
 
     if (!validatedLocation.success) {
-      console.log(validatedLocation.error.flatten().formErrors);
+      // console.log(validatedLocation.error.flatten().formErrors);
       out = {
         data: out.data,
         errors: {
@@ -575,24 +573,18 @@ export async function updateAddress(
     return out;
   }
 
-  const session = await auth();
-  if (!session) {
-    return {
-      data: null,
-      message: 'authorization header is not provided',
-    };
-  }
+  const Authorization = headers().get("Authorization") ?? "";
 
   try {
     const response = await fetch(`${baseUrl}/users/addresses/${addressId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify({ ...validatedFields.data, ...location }),
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization,
       },
     });
 
-    console.log(response);
+    // console.log(response);
 
     const json = (await response.json()) as APIResponse<
       CustomerAddress,
@@ -606,7 +598,7 @@ export async function updateAddress(
       data: json.data,
     };
   } catch (error) {
-    console.log('error :', error);
+    // console.log("error :", error);
     const createAddressErr = error as CreateAddressError;
     if (createAddressErr.message) {
       out = {
@@ -630,18 +622,18 @@ export async function updateAddress(
       },
     };
   } finally {
-    revalidateTag('address');
+    revalidateTag("address");
     return out;
   }
 }
 
 export async function deleteAddress(addressId: number) {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
 
   const response = await fetch(`${baseUrl}/users/addresses/${addressId}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
   });
 
@@ -653,20 +645,20 @@ export async function deleteAddress(addressId: number) {
   if (!response.ok) {
     throw new Error(JSON.stringify(json));
   }
-  revalidateTag('address');
+  revalidateTag("address");
 }
 
 export async function selectPrimaryAddress(addressId: number) {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
 
   const response = await fetch(
     `${baseUrl}/users/addresses/${addressId}/primary`,
     {
-      method: 'POST',
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
-    }
+    },
   );
 
   const json = (await response.json()) as APIResponse<
@@ -677,7 +669,7 @@ export async function selectPrimaryAddress(addressId: number) {
   if (!response.ok) {
     throw new Error(JSON.stringify(json));
   }
-  revalidateTag('address');
+  revalidateTag("address");
 }
 
 export type ChangePasswordState = {
@@ -685,7 +677,7 @@ export type ChangePasswordState = {
     password?: string[];
     confirm_password?: string[];
   };
-  status: 'iddle' | 'success' | 'error';
+  status: "iddle" | "success" | "error";
   message?: string | null;
 };
 
@@ -695,32 +687,32 @@ const ChangePasswordSchema = z
     confirm_password: z.string(),
   })
   .refine((schema) => schema.new_password === schema.confirm_password, {
-    message: 'Confirm password not match',
-    path: ['confirm_password'],
+    message: "Confirm password not match",
+    path: ["confirm_password"],
   });
 
 export async function changePassword(
   prevState: ChangePasswordState,
-  formData: FormData
+  formData: FormData,
 ): Promise<ChangePasswordState> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const validatedFields = ChangePasswordSchema.safeParse(
-    Object.fromEntries(formData.entries())
+    Object.fromEntries(formData.entries()),
   );
 
   if (!validatedFields.success) {
     return {
-      status: 'error',
+      status: "error",
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
 
   try {
     const response = await fetch(`${baseUrl}/auth/change-password`, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ ...validatedFields.data }),
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
     });
 
@@ -734,19 +726,19 @@ export async function changePassword(
     }
 
     return {
-      status: 'success',
-      message: 'Your password has been changed successfully',
+      status: "success",
+      message: "Your password has been changed successfully",
     };
   } catch (error) {
     const changePasswordError = error as ChangePasswordError;
     if (changePasswordError.message) {
       return {
-        status: 'error',
+        status: "error",
         message: changePasswordError.message,
       };
     }
     return {
-      status: 'error',
+      status: "error",
       errors: {
         password: changePasswordError.password,
         confirm_password: changePasswordError.confirm_password,
@@ -756,23 +748,23 @@ export async function changePassword(
 }
 
 export type UploadState = {
-  status: 'iddle' | 'success' | 'error';
+  status: "iddle" | "success" | "error";
   message?: string | null;
   data: null | UploadResponse;
 };
 
 export async function uploadProfilePicture(
   prevState: UploadState,
-  formData: FormData
+  formData: FormData,
 ): Promise<UploadState> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
 
   try {
     const response = await fetch(`${baseUrl}/uploads/users/images`, {
-      method: 'POST',
+      method: "POST",
       body: formData,
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
     });
 
@@ -786,34 +778,34 @@ export async function uploadProfilePicture(
     }
 
     return {
-      status: 'success',
-      message: 'Your profile picture has been changed successfully',
+      status: "success",
+      message: "Your profile picture has been changed successfully",
       data: json.data,
     };
   } catch (error) {
     const uploadError = error as { message: string };
     return {
-      status: 'error',
+      status: "error",
       message: uploadError.message,
       data: null,
     };
   } finally {
-    revalidateTag('user');
+    revalidateTag("user");
   }
 }
 
 export async function saveProfilePicture(uploadId: string) {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
 
   const uploadIdSchema = z.string().uuid();
 
   const upload_id = uploadIdSchema.parse(uploadId);
 
   const response = await fetch(`${baseUrl}/users/profile-image`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({ upload_id }),
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
   });
 
@@ -826,10 +818,10 @@ export async function saveProfilePicture(uploadId: string) {
     throw new Error(JSON.stringify(json));
   }
 
-  revalidateTag('user');
+  revalidateTag("user");
 }
 
-const genders = ['female', 'male'];
+const genders = ["female", "male"];
 
 const UserProfileScema = z
   .object({
@@ -837,7 +829,7 @@ const UserProfileScema = z
     phone: z
       .string()
       .regex(/^(\+62|62|0)8[1-9][0-9]{6,9}$/, {
-        message: 'Invalid phone number',
+        message: "Invalid phone number",
       })
       .optional(),
     gender: z.string().optional(),
@@ -851,45 +843,45 @@ const UserProfileScema = z
       return true;
     },
     {
-      message: 'invalid gender',
-      path: ['gender'],
-    }
+      message: "invalid gender",
+      path: ["gender"],
+    },
   );
 
 export type UpdateProfileState = {
-  status: 'iddle' | 'success' | 'error';
+  status: "iddle" | "success" | "error";
   errors?: UpdateProfileError;
   message?: string | null;
 };
 
 export async function updateUserProfile(
   prevState: UpdateProfileState,
-  formData: FormData
+  formData: FormData,
 ): Promise<UpdateProfileState> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const validatedFields = UserProfileScema.safeParse({
-    name: formData.get('name'),
-    phone: formData.get('phone'),
-    gender: formData.get('gender'),
-    birthdate: formData.get('birthdate'),
+    name: formData.get("name"),
+    phone: formData.get("phone"),
+    gender: formData.get("gender"),
+    birthdate: formData.get("birthdate"),
   });
 
   if (!validatedFields.success) {
     return {
-      status: 'error',
+      status: "error",
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
 
   try {
     const response = await fetch(`${baseUrl}/users/profile`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify({
         ...validatedFields.data,
-        birthdate: formData.get('birthdate'),
+        birthdate: formData.get("birthdate"),
       }),
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
     });
 
@@ -903,19 +895,19 @@ export async function updateUserProfile(
     }
 
     return {
-      status: 'success',
-      message: 'Your profile has been updated successfully',
+      status: "success",
+      message: "Your profile has been updated successfully",
     };
   } catch (error) {
     const updateError = error as UpdateProfileError;
     if (updateError.message) {
       return {
-        status: 'error',
+        status: "error",
         message: updateError.message,
       };
     }
     return {
-      status: 'error',
+      status: "error",
       errors: {
         name: updateError.name,
         birthdate: updateError.birthdate,
@@ -924,17 +916,17 @@ export async function updateUserProfile(
       },
     };
   } finally {
-    revalidateTag('user');
+    revalidateTag("user");
   }
 }
 
 export async function updateCartQuantity(productSku: string, quantity: number) {
-  const session = await auth();
-
+  const headersList = headers();
+  const Authorization = headersList.get("Authorization") ?? "";
   const response = await fetch(`${baseUrl}/carts/${productSku}`, {
-    method: 'PATCH',
+    method: "PATCH",
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     body: JSON.stringify({
       quantity,
@@ -945,47 +937,47 @@ export async function updateCartQuantity(productSku: string, quantity: number) {
     { message: string }
   >;
 
-  revalidateTag('cart');
+  revalidateTag("cart");
   return json;
 }
 
 export async function deleteCart(productSku: string) {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(
     `https://toko-mojopahit-production.up.railway.app/v1/carts/${productSku}`,
     {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
-    }
+    },
   );
   const json = (await response.json()) as APIResponse<
     { message: string } | undefined,
     { message: string }
   >;
 
-  revalidateTag('cart');
+  revalidateTag("cart");
   return json;
 }
 
 export type WishlistActionState = {
-  status: 'iddle' | 'success' | 'error';
+  status: "iddle" | "success" | "error";
   message: string | null;
 };
 
 export async function deleteWishlist(
   prevState: WishlistActionState,
-  formData: FormData
+  formData: FormData,
 ): Promise<WishlistActionState> {
-  const session = await auth();
-  const productSku = formData.get('sku');
+  const Authorization = headers().get("Authorization") ?? "";
+  const productSku = formData.get("sku");
 
   try {
     const response = await fetch(`${baseUrl}/wishlist/${productSku}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
     });
     const json = (await response.json()) as APIResponse<
@@ -997,8 +989,8 @@ export async function deleteWishlist(
       throw new Error(JSON.stringify(json));
     }
     return {
-      status: 'success',
-      message: 'Produk berhasil ditambahkan ke keranjang',
+      status: "success",
+      message: "Produk berhasil ditambahkan ke keranjang",
     };
   } catch (error) {
     if (error instanceof Error) {
@@ -1007,16 +999,16 @@ export async function deleteWishlist(
         { message: string }
       >;
       return {
-        status: 'error',
+        status: "error",
         message: json.errors.message,
       };
     }
     return {
-      status: 'error',
-      message: 'Something gone wrong!',
+      status: "error",
+      message: "Something gone wrong!",
     };
   } finally {
-    revalidateTag('wishlist');
+    revalidateTag("wishlist");
   }
 }
 
@@ -1024,66 +1016,66 @@ const CreateProduct = z
   .object({
     name: z.string().min(3),
     description: z.string().optional(),
-    category: z.string().min(1, { message: 'category is required' }),
+    category: z.string().min(1, { message: "category is required" }),
     dimension: z.object({
       length: z.coerce
         .number({
-          invalid_type_error: 'length must be a number',
-          required_error: 'length is required',
+          invalid_type_error: "length must be a number",
+          required_error: "length is required",
         })
-        .min(1, { message: 'length must be 1 cm or more' })
-        .max(1000, { message: 'length must be 1000 cm or fewer' }),
+        .min(1, { message: "length must be 1 cm or more" })
+        .max(1000, { message: "length must be 1000 cm or fewer" }),
       width: z.coerce
         .number({
-          invalid_type_error: 'width must be a number',
-          required_error: 'width is required',
+          invalid_type_error: "width must be a number",
+          required_error: "width is required",
         })
-        .min(1, { message: 'width must be 1 cm or more' })
-        .max(1000, { message: 'width must be 1000 cm or fewer' }),
+        .min(1, { message: "width must be 1 cm or more" })
+        .max(1000, { message: "width must be 1000 cm or fewer" }),
       height: z.coerce
         .number({
-          invalid_type_error: 'height must be a number',
-          required_error: 'height is required',
+          invalid_type_error: "height must be a number",
+          required_error: "height is required",
         })
-        .min(1, { message: 'height must be 1 cm or more' })
-        .max(1000, { message: 'height must be 1000 cm or fewer' }),
-      unit: z.string().min(1, { message: 'unit is required' }),
+        .min(1, { message: "height must be 1 cm or more" })
+        .max(1000, { message: "height must be 1000 cm or fewer" }),
+      unit: z.string().min(1, { message: "unit is required" }),
     }),
     weight: z.object({
       value: z.coerce
         .number({
-          invalid_type_error: 'weight must be a number',
-          required_error: 'weight is required',
+          invalid_type_error: "weight must be a number",
+          required_error: "weight is required",
         })
-        .min(1, { message: 'weight must be 1 gr or more' })
-        .max(500000, { message: 'weight must be 500000 gr or fewer' }),
-      unit: z.string().min(1, { message: 'unit is required' }),
+        .min(1, { message: "weight must be 1 gr or more" })
+        .max(500000, { message: "weight must be 500000 gr or fewer" }),
+      unit: z.string().min(1, { message: "unit is required" }),
     }),
     available: z.boolean(),
     featured: z
       .string()
       .nullish()
-      .transform((value) => value === 'true'),
+      .transform((value) => value === "true"),
     customizable: z.boolean(),
     stock: z.coerce
       .number()
-      .min(1, { message: 'stock must be 1 or more' })
+      .min(1, { message: "stock must be 1 or more" })
       .nullish(),
     price: z.coerce
       .number()
-      .min(1000, { message: 'price must be 1000 or more' })
+      .min(1000, { message: "price must be 1000 or more" })
       .nullish(),
     selections: z
       .array(
         z.object({
-          name: z.string().min(1, { message: 'name is required' }),
+          name: z.string().min(1, { message: "name is required" }),
           options: z.array(
             z.object({
-              value: z.string().min(1, { message: 'value is required' }),
+              value: z.string().min(1, { message: "value is required" }),
               hex_code: z.string().optional(),
-            })
+            }),
           ),
-        })
+        }),
       )
       .transform((value) => (value.length === 0 ? undefined : value)),
     variants: z
@@ -1091,108 +1083,108 @@ const CreateProduct = z
         z.object({
           variant_name: z
             .string()
-            .min(1, { message: 'variant name is required' }),
+            .min(1, { message: "variant name is required" }),
           price: z.coerce.number().min(1000),
-        })
+        }),
       )
       .transform((value) => (value.length === 0 ? undefined : value)),
     model: z
-      .string({ required_error: 'model is required' })
+      .string({ required_error: "model is required" })
       .uuid()
       .transform((value) => ({
         upload_id: value,
       })),
     images: z
       .array(z.string().uuid())
-      .min(1, { message: 'images must be contain at least 1' })
+      .min(1, { message: "images must be contain at least 1" })
       .transform((value) =>
         value.map((id) => ({
           upload_id: id,
-        }))
+        })),
       ),
   })
   .superRefine((val, ctx) => {
     if (val.customizable) {
-      console.log(val.customizable);
+      // console.log(val.customizable);
       if (val.selections === undefined) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'array',
+          expected: "array",
           received: typeof val.selections,
           fatal: true,
-          message: 'Selections is required if customizable is true',
-          path: ['selections'],
+          message: "Selections is required if customizable is true",
+          path: ["selections"],
         });
       }
       if (val.variants === undefined) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'array',
+          expected: "array",
           received: typeof val.variants,
           fatal: true,
-          message: 'Variants is required if customizable is true',
-          path: ['variant'],
+          message: "Variants is required if customizable is true",
+          path: ["variant"],
         });
       }
       if (!!val.stock) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'undefined',
+          expected: "undefined",
           received: typeof val.stock,
           fatal: true,
-          message: 'Stok is excepted if customizable is true',
-          path: ['stock'],
+          message: "Stok is excepted if customizable is true",
+          path: ["stock"],
         });
       }
       if (!!val.price) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'undefined',
+          expected: "undefined",
           received: typeof val.price,
           fatal: true,
-          message: 'Price is excepted if customizable is true',
-          path: ['price'],
+          message: "Price is excepted if customizable is true",
+          path: ["price"],
         });
       }
     } else {
       if (val.selections !== undefined) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'undefined',
+          expected: "undefined",
           received: typeof val.selections,
           fatal: true,
-          message: 'Selections is excepted if customizable is false',
-          path: ['selections'],
+          message: "Selections is excepted if customizable is false",
+          path: ["selections"],
         });
       }
       if (val.variants !== undefined) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'undefined',
+          expected: "undefined",
           received: typeof val.variants,
           fatal: true,
-          message: 'Variants is excepted if customizable is false',
-          path: ['variant'],
+          message: "Variants is excepted if customizable is false",
+          path: ["variant"],
         });
       }
       if (!!!val.stock) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'number',
+          expected: "number",
           received: typeof val.stock,
           fatal: true,
-          message: 'Stok is required if customizable is false',
-          path: ['stock'],
+          message: "Stok is required if customizable is false",
+          path: ["stock"],
         });
       }
       if (!!!val.price) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'number',
+          expected: "number",
           received: typeof val.price,
           fatal: true,
-          message: 'Price is required if customizable is false',
-          path: ['price'],
+          message: "Price is required if customizable is false",
+          path: ["price"],
         });
       }
     }
@@ -1202,69 +1194,69 @@ const UpdateProduct = z
   .object({
     name: z.string().min(3),
     description: z.string().optional(),
-    category: z.string().min(1, { message: 'category is required' }),
+    category: z.string().min(1, { message: "category is required" }),
     dimension: z.object({
       length: z.coerce
         .number({
-          invalid_type_error: 'length must be a number',
-          required_error: 'length is required',
+          invalid_type_error: "length must be a number",
+          required_error: "length is required",
         })
-        .min(1, { message: 'length must be 1 cm or more' })
-        .max(1000, { message: 'length must be 1000 cm or fewer' }),
+        .min(1, { message: "length must be 1 cm or more" })
+        .max(1000, { message: "length must be 1000 cm or fewer" }),
       width: z.coerce
         .number({
-          invalid_type_error: 'width must be a number',
-          required_error: 'width is required',
+          invalid_type_error: "width must be a number",
+          required_error: "width is required",
         })
-        .min(1, { message: 'width must be 1 cm or more' })
-        .max(1000, { message: 'width must be 1000 cm or fewer' }),
+        .min(1, { message: "width must be 1 cm or more" })
+        .max(1000, { message: "width must be 1000 cm or fewer" }),
       height: z.coerce
         .number({
-          invalid_type_error: 'height must be a number',
-          required_error: 'height is required',
+          invalid_type_error: "height must be a number",
+          required_error: "height is required",
         })
-        .min(1, { message: 'height must be 1 cm or more' })
-        .max(1000, { message: 'height must be 1000 cm or fewer' }),
-      unit: z.string().min(1, { message: 'unit is required' }),
+        .min(1, { message: "height must be 1 cm or more" })
+        .max(1000, { message: "height must be 1000 cm or fewer" }),
+      unit: z.string().min(1, { message: "unit is required" }),
     }),
     weight: z.object({
       value: z.coerce
         .number({
-          invalid_type_error: 'weight must be a number',
-          required_error: 'weight is required',
+          invalid_type_error: "weight must be a number",
+          required_error: "weight is required",
         })
-        .min(1, { message: 'weight must be 1 gr or more' })
-        .max(500000, { message: 'weight must be 500000 gr or fewer' }),
-      unit: z.string().min(1, { message: 'unit is required' }),
+        .min(1, { message: "weight must be 1 gr or more" })
+        .max(500000, { message: "weight must be 500000 gr or fewer" }),
+      unit: z.string().min(1, { message: "unit is required" }),
     }),
     available: z
       .string()
       .nullish()
-      .transform((value) => value === 'true'),
+      .transform((value) => value === "true"),
     featured: z
       .string()
       .nullish()
-      .transform((value) => value === 'true'),
+      .transform((value) => value === "true"),
     customizable: z.boolean(),
     stock: z.coerce
       .number()
-      .min(1, { message: 'stock must be 1 or more' })
+      .min(1, { message: "stock must be 1 or more" })
       .nullish(),
     price: z.coerce
       .number()
-      .min(1000, { message: 'price must be 1000 or more' })
+      .min(1000, { message: "price must be 1000 or more" })
       .nullish(),
     selections: z
       .array(
         z.object({
-          name: z.string().min(1, { message: 'name is required' }),
+          name: z.string().min(1, { message: "name is required" }),
           options: z.array(
             z.object({
-              value: z.string().min(1, { message: 'value is required' }),
+              value: z.string().min(1, { message: "value is required" }),
               hex_code: z.string().optional(),
-            })
+            }),
           ),
-        })
+        }),
       )
       .transform((value) => (value.length === 0 ? undefined : value)),
     variants: z
@@ -1272,13 +1264,13 @@ const UpdateProduct = z
         z.object({
           variant_name: z
             .string()
-            .min(1, { message: 'variant name is required' }),
+            .min(1, { message: "variant name is required" }),
           price: z.coerce.number().min(1000),
-        })
+        }),
       )
       .transform((value) => (value.length === 0 ? undefined : value)),
     model: z
-      .string({ required_error: 'model is required' })
+      .string({ required_error: "model is required" })
       .uuid()
       .optional()
       .transform((value) => {
@@ -1291,95 +1283,95 @@ const UpdateProduct = z
       }),
     images: z
       .array(z.string().uuid())
-      .min(1, { message: 'images must be contain at least 1' })
+      .min(1, { message: "images must be contain at least 1" })
       .transform((value) =>
         value.map((id) => ({
           upload_id: id,
-        }))
+        })),
       ),
   })
   .superRefine((val, ctx) => {
     if (val.customizable) {
-      console.log(val.customizable);
+      // console.log(val.customizable);
       if (val.selections === undefined) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'array',
+          expected: "array",
           received: typeof val.selections,
           fatal: true,
-          message: 'Selections is required if customizable is true',
-          path: ['selections'],
+          message: "Selections is required if customizable is true",
+          path: ["selections"],
         });
       }
       if (val.variants === undefined) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'array',
+          expected: "array",
           received: typeof val.variants,
           fatal: true,
-          message: 'Variants is required if customizable is true',
-          path: ['variant'],
+          message: "Variants is required if customizable is true",
+          path: ["variant"],
         });
       }
       if (!!val.stock) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'undefined',
+          expected: "undefined",
           received: typeof val.stock,
           fatal: true,
-          message: 'Stok is excepted if customizable is true',
-          path: ['stock'],
+          message: "Stok is excepted if customizable is true",
+          path: ["stock"],
         });
       }
       if (!!val.price) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'undefined',
+          expected: "undefined",
           received: typeof val.price,
           fatal: true,
-          message: 'Price is excepted if customizable is true',
-          path: ['price'],
+          message: "Price is excepted if customizable is true",
+          path: ["price"],
         });
       }
     } else {
       if (val.selections !== undefined) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'undefined',
+          expected: "undefined",
           received: typeof val.selections,
           fatal: true,
-          message: 'Selections is excepted if customizable is false',
-          path: ['selections'],
+          message: "Selections is excepted if customizable is false",
+          path: ["selections"],
         });
       }
       if (val.variants !== undefined) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'undefined',
+          expected: "undefined",
           received: typeof val.variants,
           fatal: true,
-          message: 'Variants is excepted if customizable is false',
-          path: ['variant'],
+          message: "Variants is excepted if customizable is false",
+          path: ["variant"],
         });
       }
       if (!!!val.stock) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'number',
+          expected: "number",
           received: typeof val.stock,
           fatal: true,
-          message: 'Stok is required if customizable is false',
-          path: ['stock'],
+          message: "Stok is required if customizable is false",
+          path: ["stock"],
         });
       }
       if (!!!val.price) {
         ctx.addIssue({
           code: z.ZodIssueCode.invalid_type,
-          expected: 'number',
+          expected: "number",
           received: typeof val.price,
           fatal: true,
-          message: 'Price is required if customizable is false',
-          path: ['price'],
+          message: "Price is required if customizable is false",
+          path: ["price"],
         });
       }
     }
@@ -1392,44 +1384,44 @@ export type CreateProductState = {
 
 export async function createProduct(
   customizable: boolean,
-  selctions: SelectionProduct[],
-  variants: Required<Omit<Variant, 'sku' | 'stock'>>[],
+  selections: SelectionProduct[],
+  variants: Required<Omit<Variant, "sku" | "stock">>[],
   prevState: CreateProductState,
-  formData: FormData
+  formData: FormData,
 ) {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
 
   try {
     const { model, images } = await uploadFiles(
-      session,
-      formData.getAll('images'),
-      formData.get('model')
+      Authorization,
+      formData.getAll("images"),
+      formData.get("model"),
     );
 
     const validateBasicFields = CreateProduct.safeParse({
-      name: formData.get('name'),
-      description: formData.get('description'),
-      category: formData.get('category'),
+      name: formData.get("name"),
+      description: formData.get("description"),
+      category: formData.get("category"),
       dimension: {
-        length: formData.get('length'),
-        width: formData.get('width'),
-        height: formData.get('height'),
-        unit: 'cm',
+        length: formData.get("length"),
+        width: formData.get("width"),
+        height: formData.get("height"),
+        unit: "cm",
       },
       weight: {
-        value: formData.get('weight'),
-        unit: 'gr',
+        value: formData.get("weight"),
+        unit: "gr",
       },
       available: true,
-      featured: formData.get('featured'),
+      featured: formData.get("featured"),
       customizable: customizable,
-      selections: selctions,
+      selections: selections,
       variants: variants,
-      stock: formData.get('stock'),
-      price: formData.get('price'),
+      stock: formData.get("stock"),
+      price: formData.get("price"),
       model: model?.id,
       images: images?.map((image) => {
-        if (typeof image === 'string') {
+        if (typeof image === "string") {
           return image;
         }
         return image.id;
@@ -1437,17 +1429,17 @@ export async function createProduct(
     });
 
     if (!validateBasicFields.success) {
-      console.log(validateBasicFields.error.flatten().fieldErrors);
+      // console.log(validateBasicFields.error.flatten().fieldErrors);
       return {
         errors: validateBasicFields.error.flatten().fieldErrors,
       };
     }
-    console.log(validateBasicFields.data.selections);
-    console.log(validateBasicFields.data.variants);
+    // console.log(validateBasicFields.data.selections);
+    // console.log(validateBasicFields.data.variants);
     const response = await fetch(`${baseUrl}/products/`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
       body: JSON.stringify({ ...validateBasicFields.data }),
     });
@@ -1465,13 +1457,13 @@ export async function createProduct(
       };
     }
   } finally {
-    revalidateTag('product');
+    revalidateTag("product");
   }
-  redirect('/dashboard/products');
+  redirect("/dashboard/products");
 }
 
 export type UpdateProductState = {
-  status: 'iddle' | 'success' | 'error';
+  status: "iddle" | "success" | "error";
   errors?: ProductError;
   message?: string | null;
 };
@@ -1479,44 +1471,44 @@ export type UpdateProductState = {
 export async function updateProduct(
   productId: number,
   customizable: boolean,
-  selctions: SelectionProduct[],
-  variants: Required<Omit<Variant, 'sku' | 'stock'>>[],
+  selections: SelectionProduct[],
+  variants: Required<Omit<Variant, "sku" | "stock">>[],
   prevState: UpdateProductState,
-  formData: FormData
+  formData: FormData,
 ): Promise<UpdateProductState> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
 
   try {
     const { model, images } = await uploadFiles(
-      session,
-      formData.getAll('images'),
-      formData.get('model')
+      Authorization,
+      formData.getAll("images"),
+      formData.get("model"),
     );
 
     const validateBasicFields = UpdateProduct.safeParse({
-      name: formData.get('name'),
-      description: formData.get('description'),
-      category: formData.get('category'),
+      name: formData.get("name"),
+      description: formData.get("description"),
+      category: formData.get("category"),
       dimension: {
-        length: formData.get('length'),
-        width: formData.get('width'),
-        height: formData.get('height'),
-        unit: 'cm',
+        length: formData.get("length"),
+        width: formData.get("width"),
+        height: formData.get("height"),
+        unit: "cm",
       },
       weight: {
-        value: formData.get('weight'),
-        unit: 'gr',
+        value: formData.get("weight"),
+        unit: "gr",
       },
-      available: formData.get('available'),
-      featured: formData.get('featured'),
+      available: formData.get("available"),
+      featured: formData.get("featured"),
       customizable: customizable,
-      selections: selctions,
+      selections: selections,
       variants: variants,
-      stock: formData.get('stock'),
-      price: formData.get('price'),
+      stock: formData.get("stock"),
+      price: formData.get("price"),
       model: model?.id,
       images: images?.map((image) => {
-        if (typeof image === 'string') {
+        if (typeof image === "string") {
           return image;
         }
         return image.id;
@@ -1524,16 +1516,16 @@ export async function updateProduct(
     });
 
     if (!validateBasicFields.success) {
-      console.log(validateBasicFields.error.flatten().fieldErrors);
+      // console.log(validateBasicFields.error.flatten().fieldErrors);
       return {
-        status: 'error',
+        status: "error",
         errors: validateBasicFields.error.flatten().fieldErrors,
       };
     }
     const response = await fetch(`${baseUrl}/products/${productId}`, {
-      method: 'PATCH',
+      method: "PATCH",
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
       body: JSON.stringify({ ...validateBasicFields.data }),
     });
@@ -1546,36 +1538,36 @@ export async function updateProduct(
     }
 
     return {
-      status: 'success',
-      message: 'Produk berhasil di update',
+      status: "success",
+      message: "Produk berhasil di update",
     };
   } catch (error) {
     if (error instanceof Error) {
       return {
-        status: 'error',
+        status: "error",
         message: error.message,
       };
     }
     return {
-      status: 'error',
-      message: 'something went wrong',
+      status: "error",
+      message: "something went wrong",
     };
   } finally {
-    revalidateTag('product');
+    revalidateTag("product");
   }
 }
 
 async function uploadModel(
-  session: Session | null,
-  file: Blob | string | null
+  Authorization: string,
+  file: Blob | string | null,
 ): Promise<FileResponse | undefined> {
   const formData = new FormData();
   if (file instanceof Blob) {
-    formData.append('file', file);
+    formData.append("file", file);
     const response = await fetch(`${baseUrl}/uploads/products/models`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
       body: formData,
     });
@@ -1593,15 +1585,15 @@ async function uploadModel(
 }
 
 async function uploadFiles(
-  session: Session | null,
+  Authorization: string,
   files: Array<Blob | string>,
-  model: Blob | string | null
+  model: Blob | string | null,
 ): Promise<{ images?: (FileResponse | string)[]; model?: FileResponse }> {
   const promises: Array<Promise<FileResponse | string>> = [];
 
   files.forEach((file) => {
     if (file instanceof Blob) {
-      promises.push(uploadProductImage(session, file));
+      promises.push(uploadProductImage(Authorization, file));
       return;
     }
     promises.push(isEmptyString(file));
@@ -1610,15 +1602,15 @@ async function uploadFiles(
   try {
     const data = await Promise.all([
       Promise.all(promises),
-      uploadModel(session, model),
+      uploadModel(Authorization, model),
     ]);
     return {
       images: data[0],
       model: data[1],
     };
   } catch (error) {
-    console.log(error);
-    throw new Error('failed to upload files, please try again !', {
+    // console.log(error);
+    throw new Error("failed to upload files, please try again !", {
       cause: error,
     });
   }
@@ -1635,15 +1627,15 @@ const isEmptyString = (uploadId: string): Promise<string> =>
   });
 
 async function uploadProductImage(
-  session: Session | null,
-  file: Blob
+  Authorization: string,
+  file: Blob,
 ): Promise<FileResponse> {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append("file", file);
   const response = await fetch(`${baseUrl}/uploads/products/images`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     body: formData,
   });
@@ -1659,12 +1651,12 @@ async function uploadProductImage(
 }
 
 export async function deleteProduct(productId: number) {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
 
   const response = await fetch(`${baseUrl}/products/${productId}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
   });
 
@@ -1676,16 +1668,16 @@ export async function deleteProduct(productId: number) {
   if (!response.ok) {
     throw new Error(JSON.stringify(json));
   }
-  revalidateTag('product');
+  revalidateTag("product");
 }
 
 export async function deleteAdmin(userId: string) {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
 
   const response = await fetch(`${baseUrl}/admin/${userId}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
   });
 
@@ -1697,16 +1689,16 @@ export async function deleteAdmin(userId: string) {
   if (!response.ok) {
     throw new Error(JSON.stringify(json));
   }
-  revalidateTag('admin');
+  revalidateTag("admin");
 }
 
 const RegisterAdminSchema = z.object({
   name: z.string().min(3),
   email: z.string().email(),
   phone: z.string().regex(/^(\+62|62|0)8[1-9][0-9]{6,9}$/, {
-    message: 'invalid phone number',
+    message: "invalid phone number",
   }),
-  role: z.string().min(1, { message: 'role is required' }),
+  role: z.string().min(1, { message: "role is required" }),
   password: z.string().min(8),
 });
 
@@ -1717,12 +1709,12 @@ export type RegisterAdminState = {
 
 export async function registerAdmin(
   prevState: RegisterAdminState,
-  formData: FormData
+  formData: FormData,
 ) {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const validatedFields = RegisterAdminSchema.safeParse({
     ...Object.fromEntries(formData.entries()),
-    role: 'admin',
+    role: "admin",
   });
 
   if (!validatedFields.success) {
@@ -1733,9 +1725,9 @@ export async function registerAdmin(
 
   try {
     const response = await fetch(`${baseUrl}/admin`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
       body: JSON.stringify({ ...validatedFields.data }),
     });
@@ -1764,19 +1756,19 @@ export async function registerAdmin(
       },
     };
   } finally {
-    revalidateTag('admin');
+    revalidateTag("admin");
   }
 
-  redirect('/dashboard/admins');
+  redirect("/dashboard/admins");
 }
 
 export async function requestPickUp(orderId: string) {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
 
   const response = await fetch(`${baseUrl}/orders/${orderId}/pick-up`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
   });
 
@@ -1788,5 +1780,5 @@ export async function requestPickUp(orderId: string) {
   if (!response.ok) {
     throw new Error(JSON.stringify(json));
   }
-  revalidateTag('order');
+  revalidateTag("order");
 }

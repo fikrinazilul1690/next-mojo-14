@@ -17,7 +17,7 @@
     "clsx": "^2.0.0",
     "crypto-js": "^4.2.0",
     "framer-motion": "^10.16.12",
-    "next": "latest",
+    "next": "14.0.4",
     "next-auth": "beta",
     "react": "latest",
     "react-dom": "latest",

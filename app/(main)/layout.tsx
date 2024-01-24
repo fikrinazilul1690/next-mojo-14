@@ -1,7 +1,7 @@
-import UserProvider from '@/app/context/user-provider';
-import { fetchUser } from '@/app/lib/data';
-import { auth } from '@/auth';
-import { SessionProvider } from 'next-auth/react';
+import UserProvider from "@/app/context/user-provider";
+import { fetchUser } from "@/app/lib/data";
+import { auth } from "@/auth";
+import { SessionProvider } from "next-auth/react";
 
 export default async function MainLayout({
   children,
@@ -9,6 +9,7 @@ export default async function MainLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+  console.log("main layout called");
   const user = await fetchUser(session);
   return (
     <SessionProvider session={session}>

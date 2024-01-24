@@ -1,9 +1,9 @@
-import NextAuth, { type DefaultSession } from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
-import { authConfig } from './auth.config';
-import { baseUrl } from './app/lib/data';
-import { z } from 'zod';
-import type { APIResponse, LoginResponse } from '@/app/lib/definitions';
+import NextAuth, { type DefaultSession } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import { authConfig } from "./auth.config";
+import { baseUrl } from "./app/lib/data";
+import { z } from "zod";
+import type { APIResponse, LoginResponse } from "@/app/lib/definitions";
 
 async function login({
   email,
@@ -13,7 +13,7 @@ async function login({
   password: string;
 }): Promise<LoginResponse | undefined> {
   const res = await fetch(`${baseUrl}/auth/login`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({
       email,
       password,
@@ -57,6 +57,9 @@ export const {
             role: data.user.role,
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
+            accessTokenExpiresAt: Math.floor(
+              Date.parse(data.access_token_expires_at) / 1000,
+            ),
             image: data.user.profile_picture?.url,
           };
         }

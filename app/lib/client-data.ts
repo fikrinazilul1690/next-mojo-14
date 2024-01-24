@@ -1,4 +1,3 @@
-import { baseUrl } from './data';
 import {
   APIResponse,
   Bank,
@@ -11,10 +10,12 @@ import {
   ListLocation,
   Pricing,
   RateResponse,
-} from './definitions';
+} from "./definitions";
+
+const baseUrl = "https://toko-mojopahit-production.up.railway.app/v1";
 
 export async function fetchCart(
-  accessToken: string | null
+  accessToken: string | null,
 ): Promise<CartItem[] | undefined> {
   if (!accessToken) {
     return undefined;
@@ -37,13 +38,13 @@ export async function fetchCart(
 }
 
 export async function fetchListAddress(
-  accessToken: string | null
+  accessToken: string | null,
 ): Promise<ListAddresses | undefined> {
   if (!accessToken) {
     return undefined;
   }
   const response = await fetch(`${baseUrl}/users/addresses`, {
-    method: 'GET',
+    method: "GET",
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -67,55 +68,55 @@ export const listBank: Array<{
   imageUrl: string;
 }> = [
   {
-    code: 'bca',
-    name: 'Bank BCA',
-    imageUrl: '/bca.png',
+    code: "bca",
+    name: "Bank BCA",
+    imageUrl: "/bca.png",
   },
   {
-    code: 'bni',
-    name: 'Bank BNI',
-    imageUrl: '/bni.png',
+    code: "bni",
+    name: "Bank BNI",
+    imageUrl: "/bni.png",
   },
   {
-    code: 'bri',
-    name: 'Bank BRI',
-    imageUrl: '/bri.png',
+    code: "bri",
+    name: "Bank BRI",
+    imageUrl: "/bri.png",
   },
   {
-    code: 'permata',
-    name: 'Bank Permata',
-    imageUrl: '/permata_bank.png',
+    code: "permata",
+    name: "Bank Permata",
+    imageUrl: "/permata_bank.png",
   },
 ];
 
 export const limitRange = [
   {
-    value: '1',
+    value: "1",
   },
   {
-    value: '5',
+    value: "5",
   },
   {
-    value: '10',
+    value: "10",
   },
   {
-    value: '15',
+    value: "15",
   },
   {
-    value: '20',
+    value: "20",
   },
 ];
 
 export async function fetchCourierPricing(
   accessToken: string | null,
   addressId: number,
-  items: Item[]
+  items: Item[],
 ): Promise<Array<Pricing> | undefined> {
   if (!accessToken) {
     return undefined;
   }
   const response = await fetch(`${baseUrl}/rates`, {
-    method: 'POST',
+    method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -139,7 +140,7 @@ export async function fetchCourierPricing(
 
 export async function fetchDetailPayment(
   accessToken: string | null,
-  paymentId: string
+  paymentId: string,
 ): Promise<DetailPayment> {
   const response = await fetch(`${baseUrl}/payments/${paymentId}`, {
     headers: {
@@ -160,7 +161,7 @@ export async function fetchDetailPayment(
 
 export async function fetchCategoreis(): Promise<Category[]> {
   const response = await fetch(`${baseUrl}/categories`, {
-    method: 'GET',
+    method: "GET",
   });
 
   const json = (await response.json()) as APIResponse<
@@ -176,7 +177,7 @@ export async function fetchCategoreis(): Promise<Category[]> {
 }
 
 export async function fetchLocations(
-  search: string
+  search: string,
 ): Promise<ListLocation | undefined> {
   const response = await fetch(
     `${baseUrl}/locations?` +
@@ -184,8 +185,8 @@ export async function fetchLocations(
         search,
       }),
     {
-      method: 'GET',
-    }
+      method: "GET",
+    },
   );
 
   const json = (await response.json()) as APIResponse<
@@ -204,12 +205,12 @@ export async function fetchNtcColors(name: string): Promise<Color[]> {
   const response = await fetch(
     `https://api.color.pizza/v1/names/?list=ntc&name=${name}`,
     {
-      method: 'GET',
+      method: "GET",
       next: {
-        tags: ['color'],
+        tags: ["color"],
       },
-      cache: 'force-cache',
-    }
+      cache: "force-cache",
+    },
   );
   const json = await response.json();
   if (!response.ok) {

@@ -1,4 +1,3 @@
-import { auth } from '@/auth';
 import type {
   APIResponse,
   StoreInformation,
@@ -15,21 +14,22 @@ import type {
   Color,
   WikisColors,
   ProductSoldStat,
-} from './definitions';
-import { Session } from 'next-auth';
-import { notFound, redirect } from 'next/navigation';
-import { z } from 'zod';
-import { decrypt } from './crypto';
-import { formatIDR } from './utils';
+} from "./definitions";
+import { Session } from "next-auth";
+import { notFound } from "next/navigation";
+import { z } from "zod";
+import { decrypt } from "./crypto";
+import { formatIDR } from "./utils";
+import { headers } from "next/headers";
 
-export const baseUrl = 'https://toko-mojopahit-production.up.railway.app/v1';
+export const baseUrl = "https://toko-mojopahit-production.up.railway.app/v1";
 
 export async function fetchStore(): Promise<
   APIResponse<StoreInformation, { message: string }>
 > {
   const response = await fetch(`${baseUrl}/store`, {
     next: {
-      tags: ['store'],
+      tags: ["store"],
     },
   });
   const json = (await response.json()) as APIResponse<
@@ -52,7 +52,7 @@ export async function fetchUser(session: Session | null): Promise<User | null> {
     headers: {
       Authorization: `Bearer ${session?.accessToken}`,
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     User,
@@ -69,7 +69,7 @@ export async function fetchUser(session: Session | null): Promise<User | null> {
 export async function fetchFeaturedProducts(
   limit: number,
   offset: number,
-  category: string
+  category: string,
 ): Promise<APIResponse<Product[], { message: string }>> {
   await new Promise((resolve) => setTimeout(resolve, 3000));
   const response = await fetch(
@@ -81,12 +81,12 @@ export async function fetchFeaturedProducts(
         category,
       }),
     {
-      method: 'GET',
+      method: "GET",
       next: {
-        tags: ['product'],
+        tags: ["product"],
       },
-      cache: 'no-cache',
-    }
+      cache: "no-cache",
+    },
   );
   const json = (await response.json()) as APIResponse<
     Product[],
@@ -115,21 +115,22 @@ export async function fetchProductsPage(props?: {
         ...Object.fromEntries(
           Object.entries(props ?? {})
             .filter(([_key, value]) => value !== undefined)
-            .map(([key, value]) => [key, String(value)])
+            .map(([key, value]) => [key, String(value)]),
         ),
       }),
     {
-      method: 'GET',
+      method: "GET",
       next: {
-        tags: ['product'],
+        tags: ["product"],
       },
-      cache: 'no-cache',
-    }
+      cache: "no-cache",
+    },
   );
   const json = (await response.json()) as APIResponse<
     { page: number; total_products: number },
     { message: string }
   >;
+  // console.log(json.data.page);
   if (!response.ok) {
     throw new Error(JSON.stringify(json));
   }
@@ -143,26 +144,26 @@ export async function fetchOrdersPage(props?: {
 }): Promise<
   APIResponse<{ page: number; total_orders: number }, { message: string }>
 > {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(
     `${baseUrl}/orders/count-page?` +
       new URLSearchParams({
         ...Object.fromEntries(
           Object.entries(props ?? {})
             .filter(([_key, value]) => value !== undefined)
-            .map(([key, value]) => [key, String(value)])
+            .map(([key, value]) => [key, String(value)]),
         ),
       }),
     {
-      method: 'GET',
+      method: "GET",
       next: {
-        tags: ['order'],
+        tags: ["order"],
       },
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
-      cache: 'no-cache',
-    }
+      cache: "no-cache",
+    },
   );
   const json = (await response.json()) as APIResponse<
     { page: number; total_orders: number },
@@ -190,16 +191,16 @@ export async function fetchProducts(props?: {
         ...Object.fromEntries(
           Object.entries(props ?? {})
             .filter(([_key, value]) => value !== undefined)
-            .map(([key, value]) => [key, String(value)])
+            .map(([key, value]) => [key, String(value)]),
         ),
       }),
     {
-      method: 'GET',
+      method: "GET",
       next: {
-        tags: ['product'],
+        tags: ["product"],
       },
-      cache: 'no-cache',
-    }
+      cache: "no-cache",
+    },
   );
   const json = (await response.json()) as APIResponse<
     Product[],
@@ -215,9 +216,9 @@ export async function fetchCategoreis(): Promise<
   APIResponse<Category[], { message: string }>
 > {
   const response = await fetch(`${baseUrl}/categories`, {
-    method: 'GET',
+    method: "GET",
     next: {
-      tags: ['category'],
+      tags: ["category"],
     },
   });
 
@@ -234,16 +235,16 @@ export async function fetchCategoreis(): Promise<
 }
 
 export async function fetchProductDetail(
-  id: number
+  id: number,
 ): Promise<Product | undefined> {
   const response = await fetch(
     `https://toko-mojopahit-production.up.railway.app/v1/products/${id}`,
     {
       next: {
-        tags: ['product', 'payment'],
+        tags: ["product", "payment"],
       },
-      cache: 'no-cache',
-    }
+      cache: "no-cache",
+    },
   );
   const json = (await response.json()) as APIResponse<
     Product,
@@ -261,23 +262,23 @@ export async function fetchProductDetail(
 }
 
 export async function checkWishlist(sku: string): Promise<boolean | undefined> {
-  const session = await auth();
-  if (!session) {
+  const Authorization = headers().get("Authorization");
+  if (!Authorization) {
     return undefined;
   }
   const response = await fetch(
-    'https://toko-mojopahit-production.up.railway.app/v1/wishlist/check',
+    "https://toko-mojopahit-production.up.railway.app/v1/wishlist/check",
     {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({ sku }),
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
       next: {
-        tags: ['wishlist'],
+        tags: ["wishlist"],
       },
-      cache: 'no-cache',
-    }
+      cache: "no-cache",
+    },
   );
 
   const json = (await response.json()) as APIResponse<
@@ -293,20 +294,15 @@ export async function checkWishlist(sku: string): Promise<boolean | undefined> {
 }
 
 export async function fetchCart(): Promise<CartItem[]> {
-  const session = await auth();
-  if (!session) {
-    const searchParams = new URLSearchParams();
-    searchParams.set('callbackUrl', '/cart');
-    redirect(`/login?${searchParams}`);
-  }
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(`${baseUrl}/carts`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['cart', 'payment-cart'],
+      tags: ["cart", "payment-cart"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     CartItem[],
@@ -321,20 +317,15 @@ export async function fetchCart(): Promise<CartItem[]> {
 }
 
 export async function fetchCartForCheckout(): Promise<CheckoutItem[]> {
-  const session = await auth();
-  if (!session) {
-    const searchParams = new URLSearchParams();
-    searchParams.set('callbackUrl', '/cart');
-    redirect(`/login?${searchParams}`);
-  }
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(`${baseUrl}/carts`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['cart', 'payment-cart'],
+      tags: ["cart", "payment-cart"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     CartItem[],
@@ -358,23 +349,30 @@ export async function fetchCartForCheckout(): Promise<CheckoutItem[]> {
 }
 
 export async function fetchTotalCart(): Promise<number | undefined> {
-  const session = await auth();
-  if (!session) {
+  // console.log("fetch total cart");
+  const Authorization = headers().get("Authorization");
+
+  if (!Authorization) {
     return undefined;
   }
+
   const response = await fetch(`${baseUrl}/carts/total`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['cart', 'payment-cart'],
+      tags: ["cart", "payment-cart"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     { total: number },
     { message: string }
   >;
+
+  // console.log(json.data);
+
+  // console.log("fetch total cart done");
 
   if (!response.ok) {
     throw new Error(JSON.stringify(json));
@@ -384,20 +382,15 @@ export async function fetchTotalCart(): Promise<number | undefined> {
 }
 
 export async function fetchWishlist(): Promise<WishlistItem[]> {
-  const session = await auth();
-  if (!session) {
-    const searchParams = new URLSearchParams();
-    searchParams.set('callbackUrl', '/cart');
-    redirect(`/login?${searchParams}`);
-  }
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(`${baseUrl}/wishlist`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['cart', 'payment-cart'],
+      tags: ["cart", "payment-cart"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     WishlistItem[],
@@ -420,36 +413,33 @@ const CheckoutItemSchema = z.object({
 });
 
 export async function decryptToken(
-  token?: string
+  token?: string,
 ): Promise<CheckoutItem[] | undefined> {
-  const session = await auth();
-  if (!session || !token) notFound();
+  const authorization = headers().get("Authorization");
+  if (!authorization || !token) notFound();
   const decriptedData = decrypt(token);
 
   try {
     const data = CheckoutItemSchema.parse(JSON.parse(decriptedData));
     return [data];
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return undefined;
   }
 }
 
 export async function fetchDetailPayment(
-  paymentId: string
+  paymentId: string,
 ): Promise<DetailPayment | undefined> {
-  const session = await auth();
-  if (!session) {
-    return undefined;
-  }
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(`${baseUrl}/payments/${paymentId}`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['payment', 'payment-cart'],
+      tags: ["payment", "payment-cart"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     DetailPayment,
@@ -470,8 +460,8 @@ export async function fetchListAdmin(props?: {
   limit?: number;
   offset?: number;
 }): Promise<User[] | undefined> {
-  const session = await auth();
-  if (!session) {
+  const Authorization = headers().get("Authorization");
+  if (!Authorization) {
     return undefined;
   }
   const response = await fetch(
@@ -480,18 +470,18 @@ export async function fetchListAdmin(props?: {
         ...Object.fromEntries(
           Object.entries(props ?? {})
             .filter(([_key, value]) => value !== undefined)
-            .map(([key, value]) => [key, String(value)])
+            .map(([key, value]) => [key, String(value)]),
         ),
       }),
     {
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
       next: {
-        tags: ['admin'],
+        tags: ["admin"],
       },
-      cache: 'no-cache',
-    }
+      cache: "no-cache",
+    },
   );
   const json = (await response.json()) as APIResponse<
     User[],
@@ -511,26 +501,26 @@ export async function fetchAdminsPage(props?: {
 }): Promise<
   APIResponse<{ page: number; total_admins: number }, { message: string }>
 > {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(
     `${baseUrl}/admin/count?` +
       new URLSearchParams({
         ...Object.fromEntries(
           Object.entries(props ?? {})
             .filter(([_key, value]) => value !== undefined)
-            .map(([key, value]) => [key, String(value)])
+            .map(([key, value]) => [key, String(value)]),
         ),
       }),
     {
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
-      method: 'GET',
+      method: "GET",
       next: {
-        tags: ['admin'],
+        tags: ["admin"],
       },
-      cache: 'force-cache',
-    }
+      cache: "force-cache",
+    },
   );
   const json = (await response.json()) as APIResponse<
     { page: number; total_admins: number },
@@ -543,17 +533,17 @@ export async function fetchAdminsPage(props?: {
 }
 
 export default async function fetchListAddress(): Promise<ListAddresses> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   await new Promise((resolve) => setTimeout(resolve, 3000));
   const response = await fetch(`${baseUrl}/users/addresses`, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['address'],
+      tags: ["address"],
     },
-    cache: 'force-cache',
+    cache: "force-cache",
   });
 
   const json = (await response.json()) as APIResponse<
@@ -569,20 +559,20 @@ export default async function fetchListAddress(): Promise<ListAddresses> {
 }
 
 export async function fetchDetailAddress(
-  addressId: string
+  addressId: string,
 ): Promise<CustomerAddress | undefined> {
-  const session = await auth();
-  if (!session) {
+  const Authorization = headers().get("Authorization");
+  if (!Authorization) {
     return undefined;
   }
   const response = await fetch(`${baseUrl}/users/addresses/${addressId}`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['payment', 'payment-cart'],
+      tags: ["payment", "payment-cart"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     CustomerAddress,
@@ -600,16 +590,17 @@ export async function fetchDetailAddress(
 }
 
 export async function fetchListPendingPayment(): Promise<Array<DetailPayment>> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
+  console.log(Authorization);
   await new Promise((resolve) => setTimeout(resolve, 3000));
   const response = await fetch(`${baseUrl}/payments`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['payment', 'payment-cart'],
+      tags: ["payment", "payment-cart"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     Array<DetailPayment>,
@@ -628,35 +619,32 @@ export async function fetchListOrder(props?: {
   offset?: number;
   status?: string;
 }): Promise<OrderInfo[]> {
-  const session = await auth();
-  if (!session) {
-    redirect('/login?' + new URLSearchParams({ callbackUrl: '/orders' }));
-  }
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(
     `${baseUrl}/orders?` +
       new URLSearchParams({
         ...Object.fromEntries(
           Object.entries(props ?? {})
             .filter(([_key, value]) => value !== undefined)
-            .map(([key, value]) => [key, String(value)])
+            .map(([key, value]) => [key, String(value)]),
         ),
       }),
     {
       headers: {
-        Authorization: `Bearer ${session?.accessToken}`,
+        Authorization,
       },
       next: {
-        tags: ['order'],
+        tags: ["order"],
       },
-      cache: 'no-cache',
-    }
+      cache: "no-cache",
+    },
   );
   const json = (await response.json()) as APIResponse<
     OrderInfo[],
     { message: string }
   >;
 
-  console.log(json);
+  // console.log(json);
 
   if (!response.ok) {
     throw new Error(JSON.stringify(json));
@@ -666,18 +654,15 @@ export async function fetchListOrder(props?: {
 }
 
 export async function fetchOrderDetails(orderId: string): Promise<OrderInfo> {
-  const session = await auth();
-  if (!session) {
-    redirect('/login?' + new URLSearchParams({ callbackUrl: '/orders' }));
-  }
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(`${baseUrl}/orders/${orderId}`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['order'],
+      tags: ["order"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     OrderInfo,
@@ -692,12 +677,12 @@ export async function fetchOrderDetails(orderId: string): Promise<OrderInfo> {
 }
 
 export async function fetchWikipediasColors(): Promise<Color[]> {
-  const response = await fetch('https://api.color.pizza/v1/?list=wikipedia', {
-    method: 'GET',
+  const response = await fetch("https://api.color.pizza/v1/?list=wikipedia", {
+    method: "GET",
     next: {
-      tags: ['color'],
+      tags: ["color"],
     },
-    cache: 'force-cache',
+    cache: "force-cache",
   });
   const json = (await response.json()) as WikisColors;
   if (!response.ok) {
@@ -721,21 +706,21 @@ export async function fetchCardData() {
       totalTransactions: data[3],
     };
   } catch (error) {
-    console.log(error);
-    throw new Error('Failed to card data.');
+    // console.log(error);
+    throw new Error("Failed to card data.");
   }
 }
 
 export async function fetchCountOrder(): Promise<number> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(`${baseUrl}/orders/count`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['order'],
+      tags: ["order"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     { total_count: number },
@@ -750,15 +735,15 @@ export async function fetchCountOrder(): Promise<number> {
 }
 
 export async function fetchCountTransaction(): Promise<number> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(`${baseUrl}/payments/count`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['payment'],
+      tags: ["payment"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     { total_count: number },
@@ -773,15 +758,15 @@ export async function fetchCountTransaction(): Promise<number> {
 }
 
 export async function fetchTotalPendingPayment(): Promise<number> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(`${baseUrl}/payments/total-pending`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['payment'],
+      tags: ["payment"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     { total: number },
@@ -796,15 +781,15 @@ export async function fetchTotalPendingPayment(): Promise<number> {
 }
 
 export async function fetchTotalSuccessPayment(): Promise<number> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(`${baseUrl}/payments/total-success`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['payment'],
+      tags: ["payment"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     { total: number },
@@ -819,15 +804,15 @@ export async function fetchTotalSuccessPayment(): Promise<number> {
 }
 
 export async function fetchProductSoldStats(): Promise<ProductSoldStat[]> {
-  const session = await auth();
+  const Authorization = headers().get("Authorization") ?? "";
   const response = await fetch(`${baseUrl}/orders/stats`, {
     headers: {
-      Authorization: `Bearer ${session?.accessToken}`,
+      Authorization,
     },
     next: {
-      tags: ['order'],
+      tags: ["order"],
     },
-    cache: 'no-cache',
+    cache: "no-cache",
   });
   const json = (await response.json()) as APIResponse<
     ProductSoldStat[],

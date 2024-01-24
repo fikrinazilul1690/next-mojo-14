@@ -1,6 +1,6 @@
-import { fetchListOrder } from '@/app/lib/data';
-import React from 'react';
-import ListOrderInfo from './order-info-card';
+import { fetchListOrder } from "@/app/lib/data";
+import React from "react";
+import ListOrderInfo from "./order-info-card";
 
 export default async function ListOrder({
   status,
@@ -12,9 +12,9 @@ export default async function ListOrder({
   offset?: number;
 }) {
   const orders = await fetchListOrder({ status, limit, offset });
-  console.log(orders);
+  // console.log(orders);
   return (
-    <div className='w-full flex flex-col gap-3'>
+    <div className="w-full flex flex-col gap-3">
       <ListOrderInfo
         listOrderInfo={orders.sort((a, b) => {
           return (

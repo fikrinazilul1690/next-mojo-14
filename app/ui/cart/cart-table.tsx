@@ -1,9 +1,9 @@
-'use client';
-import { countCartTotal, formatIDR } from '@/app/lib/utils';
-import CartCheckout from '@/app/ui/cart/checkout';
-import CustomerEmptyTable from '@/app/ui/customer-empty-table';
-import Image from 'next/image';
-import DeleteButton from '@/app/ui/delete-button';
+"use client";
+import { countCartTotal, formatIDR } from "@/app/lib/utils";
+import CartCheckout from "@/app/ui/cart/checkout";
+import CustomerEmptyTable from "@/app/ui/customer-empty-table";
+import Image from "next/image";
+import DeleteButton from "@/app/ui/delete-button";
 import {
   Table,
   TableHeader,
@@ -11,35 +11,35 @@ import {
   TableColumn,
   TableRow,
   TableCell,
-} from '@nextui-org/table';
-import { APIResponse, CartItem } from '@/app/lib/definitions';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import toast from 'react-hot-toast';
-import { useDebouncedCallback } from 'use-debounce';
-import { useState } from 'react';
-import { deleteCart, updateCartQuantity } from '@/app/lib/actions';
-import { useTotalCart } from '@/app/context/cart-provider';
+} from "@nextui-org/table";
+import { APIResponse, CartItem } from "@/app/lib/definitions";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { useDebouncedCallback } from "use-debounce";
+import { useState } from "react";
+import { deleteCart, updateCartQuantity } from "@/app/lib/actions";
+import { useTotalCart } from "@/app/context/cart-provider";
 
 const columns = [
   {
-    name: 'Products',
-    uid: 'products',
+    name: "Products",
+    uid: "products",
   },
   {
-    name: 'Price',
-    uid: 'price',
+    name: "Price",
+    uid: "price",
   },
   {
-    name: 'Quantity',
-    uid: 'quantity',
+    name: "Quantity",
+    uid: "quantity",
   },
   {
-    name: 'Sub Total',
-    uid: 'subTotal',
+    name: "Sub Total",
+    uid: "subTotal",
   },
   {
-    name: 'Action',
-    uid: 'action',
+    name: "Action",
+    uid: "action",
   },
 ];
 
@@ -71,7 +71,7 @@ export default function CartTable({ cart }: Props) {
       return res.data;
     },
     onMutate: async ({ sku, quantity }) => {
-      await queryClient.cancelQueries({ queryKey: ['cart'] });
+      await queryClient.cancelQueries({ queryKey: ["cart"] });
       const previousCart = listItem;
 
       setListMutatedItem((prev) =>
@@ -80,20 +80,20 @@ export default function CartTable({ cart }: Props) {
             item.quantity = quantity;
           }
           return item;
-        })
+        }),
       );
 
       return { previousCart };
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
     onSuccess: () => {
       setListItem(listMutatedItem);
     },
     onError: (err, variables, context) => {
       if (context?.previousCart) {
-        console.log(context.previousCart);
+        // console.log(context.previousCart);
         setListMutatedItem(context.previousCart);
       }
       if (err.code === 400) {
@@ -102,7 +102,7 @@ export default function CartTable({ cart }: Props) {
             `Minimal pembelian produk (${variables.sku}) tidak terpenuhi`,
             {
               duration: 3000,
-            }
+            },
           );
           return;
         }
@@ -111,7 +111,7 @@ export default function CartTable({ cart }: Props) {
         });
         return;
       }
-      toast.error(err.errors.message ?? 'error occurs');
+      toast.error(err.errors.message ?? "error occurs");
     },
   });
 
@@ -132,7 +132,7 @@ export default function CartTable({ cart }: Props) {
       return res.data;
     },
     onMutate: async ({ sku }) => {
-      await queryClient.cancelQueries({ queryKey: ['cart'] });
+      await queryClient.cancelQueries({ queryKey: ["cart"] });
       const previousCart = listItem;
 
       setListMutatedItem((prev) => prev.filter((item) => item.sku !== sku));
@@ -140,21 +140,21 @@ export default function CartTable({ cart }: Props) {
       return { previousCart };
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
     onSuccess: () => {
       setListItem(listMutatedItem);
     },
     onError: (error, variables, context) => {
       if (context?.previousCart) {
-        console.log(context.previousCart);
+        // console.log(context.previousCart);
         setListMutatedItem(context.previousCart);
       }
       if (error.code === 404) {
         toast.error(`Delete failed, product not found`);
       } else {
         toast.error(
-          `Delete failed, unable to remove produk (${variables.sku}) from cart`
+          `Delete failed, unable to remove produk (${variables.sku}) from cart`,
         );
       }
     },
@@ -167,56 +167,56 @@ export default function CartTable({ cart }: Props) {
       removeWrapper
       classNames={{
         th: [
-          'bg-transparent',
-          'text-default-500',
-          'border-b',
-          'border-divider',
-          'text-center',
-          'text-base',
-          'font-semibold',
+          "bg-transparent",
+          "text-default-500",
+          "border-b",
+          "border-divider",
+          "text-center",
+          "text-base",
+          "font-semibold",
         ],
-        td: ['border-b', 'border-divider', 'text-center', 'first:text-start'],
+        td: ["border-b", "border-divider", "text-center", "first:text-start"],
       }}
-      aria-label='Example static collection table'
-      layout='fixed'
+      aria-label="Example static collection table"
+      layout="fixed"
       bottomContent={<CartCheckout cart={cart} />}
     >
       <TableHeader columns={columns}>
         {(column) => (
-          <TableColumn align='center' key={column.uid}>
+          <TableColumn align="center" key={column.uid}>
             {column.name}
           </TableColumn>
         )}
       </TableHeader>
       <TableBody
-        emptyContent={<CustomerEmptyTable title='Your Cart Is Empty' />}
+        emptyContent={<CustomerEmptyTable title="Your Cart Is Empty" />}
       >
         {listMutatedItem.map((item) => (
           <TableRow key={item.sku}>
             <TableCell>
-              <div className='flex gap-2 items-center'>
+              <div className="flex gap-2 items-center">
                 <Image
                   src={item.image.url}
                   alt={item.image.name}
                   width={50}
                   height={50}
                 />
-                <div className='flex flex-col'>
-                  <span className='text-small overflow-hidden'>
+                <div className="flex flex-col">
+                  <span className="text-small overflow-hidden">
                     {item.name}
                   </span>
-                  <span className='text-tiny text-default-400'>{item.sku}</span>
+                  <span className="text-tiny text-default-400">{item.sku}</span>
                 </div>
               </div>
             </TableCell>
             <TableCell>
-              {formatIDR(item.price).replace(/(\.|,)00$/g, '')}
+              {formatIDR(item.price).replace(/(\.|,)00$/g, "")}
             </TableCell>
             <TableCell>
               <input
                 min={1}
-                className='py-3 w-[70px] text-center number-control'
-                type='number'
+                className="py-3 w-[70px] text-center number-control"
+                type="number"
                 value={item.quantity.toString()}
                 onBlur={(e) => {
                   const val = e.currentTarget.value || String(0);
@@ -228,7 +228,7 @@ export default function CartTable({ cart }: Props) {
                 onChange={(e) => {
                   const val = e.currentTarget.value || String(0);
                   const numVal = Number(val);
-                  queryClient.cancelQueries({ queryKey: ['cart'] });
+                  queryClient.cancelQueries({ queryKey: ["cart"] });
                   setListMutatedItem(
                     listMutatedItem.map((itemData) => {
                       if (itemData.sku === item.sku) {
@@ -238,7 +238,7 @@ export default function CartTable({ cart }: Props) {
                         };
                       }
                       return itemData;
-                    })
+                    }),
                   );
                   if (numVal !== 0) {
                     debounceMutation({
@@ -250,12 +250,12 @@ export default function CartTable({ cart }: Props) {
               />
             </TableCell>
             <TableCell>
-              {formatIDR(item.quantity * item.price).replace(/(\.|,)00$/g, '')}
+              {formatIDR(item.quantity * item.price).replace(/(\.|,)00$/g, "")}
             </TableCell>
             <TableCell>
               <DeleteButton
-                ariaLabel='delete from cart'
-                variant='x'
+                ariaLabel="delete from cart"
+                variant="x"
                 onClick={() => delteMutation({ sku: item.sku })}
               />
             </TableCell>

@@ -1,8 +1,7 @@
-'use client';
-import { useState, createContext, useContext } from 'react';
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { Pricing } from '../lib/definitions';
+"use client";
+import { useState, createContext, useContext } from "react";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 type State = {
   addressId: number | null;
@@ -60,24 +59,24 @@ export const createStore = () =>
         setShippingCost: (shippingCost) => set(() => ({ shippingCost })),
       }),
       {
-        name: 'shipping',
+        name: "shipping",
         partialize: (state) =>
           Object.fromEntries(
             Object.entries(state).filter(
-              ([key]) => !['shippingCost'].includes(key)
-            )
+              ([key]) => !["shippingCost"].includes(key),
+            ),
           ),
-      }
-    )
+      },
+    ),
   );
 
 const ShippingContext = createContext<ReturnType<typeof createStore> | null>(
-  null
+  null,
 );
 
 export const useShipping = () => {
   if (!ShippingContext)
-    throw new Error('useShipping must be used within a ShippingProvider');
+    throw new Error("useShipping must be used within a ShippingProvider");
   return useContext(ShippingContext)!;
 };
 

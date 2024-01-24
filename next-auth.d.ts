@@ -1,6 +1,6 @@
-import type { DefaultSession } from '@auth/core';
+import type { DefaultSession } from "@auth/core";
 
-declare module '@auth/core/types' {
+declare module "@auth/core/types" {
   /**
    * The shape of the user object returned in the OAuth providers' `profile` callback,
    * or the second parameter of the `session` callback, when using a database.
@@ -8,6 +8,7 @@ declare module '@auth/core/types' {
   interface User {
     accessToken?: string;
     refreshToken?: string;
+    accessTokenExpiresAt?: number;
     role?: string;
   }
   /**
@@ -22,18 +23,20 @@ declare module '@auth/core/types' {
   interface Session {
     accessToken?: string;
     refreshToken?: string;
+    accessTokenExpiresAt?: number;
     user: {
       role?: string;
-    } & DefaultSession['user'];
+    } & DefaultSession["user"];
   }
 }
 
-declare module '@auth/core/jwt' {
+declare module "@auth/core/jwt" {
   /** Returned by the `jwt` callback and `auth`, when using JWT sessions */
   interface JWT {
     /** OpenID ID Token */
     role?: string;
     accessToken?: string;
     refreshToken?: string;
+    accessTokenExpiresAt?: number;
   }
 }

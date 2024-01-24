@@ -1,56 +1,56 @@
-'use client';
-import { useUser } from '@/app/context/user-provider';
-import { Button } from '@nextui-org/button';
-import { Input } from '@nextui-org/input';
-import Image from 'next/image';
-import { Select, SelectItem } from '@nextui-org/select';
+"use client";
+import { useUser } from "@/app/context/user-provider";
+import { Button } from "@nextui-org/button";
+import { Input } from "@nextui-org/input";
+import Image from "next/image";
+import { Select, SelectItem } from "@nextui-org/select";
 import {
   UpdateProfileState,
   UploadState,
   saveProfilePicture,
   updateUserProfile,
   uploadProfilePicture,
-} from '@/app/lib/actions';
-import { useFormState } from 'react-dom';
-import { useEffect } from 'react';
-import toast from 'react-hot-toast';
-import { SubmitButton } from '../submit-button';
+} from "@/app/lib/actions";
+import { useFormState } from "react-dom";
+import { useEffect } from "react";
+import toast from "react-hot-toast";
+import { SubmitButton } from "../submit-button";
 
 const genders = [
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
 ];
 
 export default function UpdateProfileForm() {
   const [user, updateUser] = useUser();
   const initialUploadState: UploadState = {
     message: null,
-    status: 'iddle',
+    status: "iddle",
     data: null,
   };
   const initialState: UpdateProfileState = {
     message: null,
-    status: 'iddle',
+    status: "iddle",
     errors: {},
   };
   const [state, action] = useFormState(
     async (prevState: UpdateProfileState, formData: FormData) => {
-      console.log('run');
+      // console.log('run');
       updateUser((prevData) => {
         if (prevData) {
           return {
             ...prevData,
-            name: formData.get('name') as string,
-            phone: formData.get('phone') as string,
-            gender: formData.get('gender') as string,
-            birthdate: formData.get('birthdate') as string,
+            name: formData.get("name") as string,
+            phone: formData.get("phone") as string,
+            gender: formData.get("gender") as string,
+            birthdate: formData.get("birthdate") as string,
           };
         }
         return prevData;
       });
       return await updateUserProfile(prevState, formData);
     },
-    initialState
+    initialState,
   );
   const [imageState, uploadAction] = useFormState(
     async (prevState: UploadState, formData: FormData) => {
@@ -69,20 +69,20 @@ export default function UpdateProfileForm() {
         return prevData;
       });
 
-      if (upload.status === 'success') {
-        await saveProfilePicture(upload.data?.id ?? '');
+      if (upload.status === "success") {
+        await saveProfilePicture(upload.data?.id ?? "");
       }
       return upload;
     },
-    initialUploadState
+    initialUploadState,
   );
 
   useEffect(() => {
     if (state.message) {
-      if (state.status === 'error') {
+      if (state.status === "error") {
         toast.error(state.message);
       }
-      if (state.status === 'success') {
+      if (state.status === "success") {
         toast.success(state.message);
       }
     }
@@ -90,10 +90,10 @@ export default function UpdateProfileForm() {
 
   useEffect(() => {
     if (imageState.message) {
-      if (imageState.status === 'error') {
+      if (imageState.status === "error") {
         toast.error(imageState.message);
       }
-      if (imageState.status === 'success') {
+      if (imageState.status === "success") {
         toast.success(imageState.message);
       }
     }
@@ -101,26 +101,26 @@ export default function UpdateProfileForm() {
 
   return (
     <form
-      className='grid grid-cols-12 grid-rows-5 gap-x-4 gap-y-2'
+      className="grid grid-cols-12 grid-rows-5 gap-x-4 gap-y-2"
       action={action}
     >
-      <div className='flex flex-col w-full h-full items-center gap-2 col-span-3 row-span-3'>
-        <div className='relative w-full h-full'>
+      <div className="flex flex-col w-full h-full items-center gap-2 col-span-3 row-span-3">
+        <div className="relative w-full h-full">
           <Image
             fill
-            className='object-contain rounded-md border-1 border-slate-200'
-            alt={`${user?.name ?? 'user'}'s profile picture`}
-            src={user?.profile_picture?.url ?? '/default-user.jpg'}
+            className="object-contain rounded-md border-1 border-slate-200"
+            alt={`${user?.name ?? "user"}'s profile picture`}
+            src={user?.profile_picture?.url ?? "/default-user.jpg"}
           />
           <input
             hidden
-            type='file'
-            name='profilePicture'
-            id='profilePicture'
+            type="file"
+            name="profilePicture"
+            id="profilePicture"
             onChange={(e) => {
               const formData = new FormData();
               if (e.target.files) {
-                formData.append('file', e.target.files[0]);
+                formData.append("file", e.target.files[0]);
               }
               uploadAction(formData);
             }}
@@ -128,54 +128,54 @@ export default function UpdateProfileForm() {
         </div>
         <Button
           fullWidth
-          as='label'
-          radius='sm'
-          variant='bordered'
-          htmlFor='profilePicture'
+          as="label"
+          radius="sm"
+          variant="bordered"
+          htmlFor="profilePicture"
         >
           Choose File
         </Button>
       </div>
       <Input
-        name='name'
-        label='Name'
-        variant='bordered'
-        labelPlacement='outside'
-        placeholder='Enter your name'
-        className='col-span-9'
+        name="name"
+        label="Name"
+        variant="bordered"
+        labelPlacement="outside"
+        placeholder="Enter your name"
+        className="col-span-9"
         defaultValue={user?.name}
         errorMessage={
           state.errors?.name &&
           state.errors.name.map((error: string) => <p key={error}>{error}</p>)
         }
-        type='text'
+        type="text"
       />
       <Input
-        name='phone'
-        label='Phone'
-        variant='bordered'
-        labelPlacement='outside'
-        placeholder='Enter your phone'
-        className='col-span-9'
+        name="phone"
+        label="Phone"
+        variant="bordered"
+        labelPlacement="outside"
+        placeholder="Enter your phone"
+        className="col-span-9"
         defaultValue={user?.phone}
         errorMessage={
           state.errors?.phone &&
           state.errors.phone.map((error: string) => <p key={error}>{error}</p>)
         }
-        type='tel'
+        type="tel"
       />
       <Select
-        label='Gender'
-        name='gender'
+        label="Gender"
+        name="gender"
         classNames={{
-          value: 'text-black',
+          value: "text-black",
         }}
-        selectionMode='single'
+        selectionMode="single"
         defaultSelectedKeys={user?.gender ? new Set([user.gender]) : undefined}
-        placeholder='Select a gender'
-        variant='bordered'
-        labelPlacement='outside'
-        className='col-span-9'
+        placeholder="Select a gender"
+        variant="bordered"
+        labelPlacement="outside"
+        className="col-span-9"
         errorMessage={
           state.errors?.gender &&
           state.errors.gender.map((error: string) => <p key={error}>{error}</p>)
@@ -188,12 +188,12 @@ export default function UpdateProfileForm() {
         ))}
       </Select>
       <Input
-        name='birthdate'
-        label='Birthdate'
-        variant='bordered'
-        labelPlacement='outside'
-        placeholder='Enter your name'
-        className='col-span-full'
+        name="birthdate"
+        label="Birthdate"
+        variant="bordered"
+        labelPlacement="outside"
+        placeholder="Enter your name"
+        className="col-span-full"
         defaultValue={user?.birthdate}
         errorMessage={
           state.errors?.birthdate &&
@@ -201,13 +201,13 @@ export default function UpdateProfileForm() {
             <p key={error}>{error}</p>
           ))
         }
-        type='date'
+        type="date"
       />
       <SubmitButton
-        radius='sm'
-        variant='solid'
-        color='primary'
-        className='row-span-1 col-start-6 col-end-8'
+        radius="sm"
+        variant="solid"
+        color="primary"
+        className="row-span-1 col-start-6 col-end-8"
       >
         Save
       </SubmitButton>

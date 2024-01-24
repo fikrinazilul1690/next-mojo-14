@@ -11,6 +11,14 @@ export type Color = {
   hex: string;
 };
 
+export type RefreshedToken = {
+  session_id: string;
+  access_token: string;
+  access_token_expires_at: string;
+  refresh_token: string;
+  refresh_token_expires_at: string;
+};
+
 export type WikisColors = {
   paletteTitle: string;
   colors: Color[];
@@ -139,11 +147,11 @@ export type CreateReadyStockProduct = {
     length: number;
     width: number;
     height: number;
-    unit: 'cm' | 'dm';
+    unit: "cm" | "dm";
   };
   weight: {
     value: number;
-    unit: 'kg' | 'gr';
+    unit: "kg" | "gr";
   };
   available: boolean;
   featured: boolean;
@@ -164,11 +172,11 @@ export type CreatePreOrderProduct = {
     length: number;
     width: number;
     height: number;
-    unit: 'cm' | 'dm';
+    unit: "cm" | "dm";
   };
   weight: {
     value: number;
-    unit: 'kg' | 'gr';
+    unit: "kg" | "gr";
   };
   available: boolean;
   featured: boolean;
@@ -178,7 +186,7 @@ export type CreatePreOrderProduct = {
     upload_id: string;
   };
   selections: VariantSelection[];
-  variants: Required<Omit<Variant, 'sku' | 'stock'>>[];
+  variants: Required<Omit<Variant, "sku" | "stock">>[];
 };
 
 export type ProductSoldStat = {
@@ -457,7 +465,7 @@ export type History = {
   updated_at: string;
 };
 
-export type Bank = 'bca' | 'bni' | 'permata' | 'bri';
+export type Bank = "bca" | "bni" | "permata" | "bri";
 
 export type WishlistItem = {
   sku: string;

@@ -1,6 +1,6 @@
-'use client';
-import React, { ChangeEvent, useEffect, useState } from 'react';
-import SelectCategory from './select-category';
+"use client";
+import React, { ChangeEvent, useEffect, useState } from "react";
+import SelectCategory from "./select-category";
 import {
   Button,
   Switch,
@@ -11,42 +11,42 @@ import {
   SelectItem,
   Chip,
   Divider,
-} from '@nextui-org/react';
-import { Product, SelectionProduct } from '@/app/lib/definitions';
-import Image from 'next/image';
-import clsx from 'clsx';
-import { RiImageAddFill, RiDeleteBin5Line } from 'react-icons/ri';
-import toast from 'react-hot-toast';
-import SelectColors from './select-colors';
-import { useVariants } from '@/app/lib/hooks';
-import InputMaterials from './input-materials';
-import Link from 'next/link';
-import { SubmitButton } from '../submit-button';
-import { UpdateProductState, updateProduct } from '@/app/lib/actions';
-import { useFormState } from 'react-dom';
+} from "@nextui-org/react";
+import { Product, SelectionProduct } from "@/app/lib/definitions";
+import Image from "next/image";
+import clsx from "clsx";
+import { RiImageAddFill, RiDeleteBin5Line } from "react-icons/ri";
+import toast from "react-hot-toast";
+import SelectColors from "./select-colors";
+import { useVariants } from "@/app/lib/hooks";
+import InputMaterials from "./input-materials";
+import Link from "next/link";
+import { SubmitButton } from "../submit-button";
+import { UpdateProductState, updateProduct } from "@/app/lib/actions";
+import { useFormState } from "react-dom";
 
-const listSelectionType = ['color', 'material'];
+const listSelectionType = ["color", "material"];
 const MaxSizeInBytes = 10 * 1024 * 1024;
 
 export default function UpdateProductForm({ product }: { product: Product }) {
   const initialFile = {
-    name: '',
+    name: "",
     data: null,
-    url: '',
-    value: '',
+    url: "",
+    value: "",
   };
   const initialState: UpdateProductState = {
-    status: 'iddle',
+    status: "iddle",
     message: null,
     errors: {},
   };
   const [selections, setSelections] = useState<SelectionProduct[]>(
-    product.selections ?? []
+    product.selections ?? [],
   );
   const { variants, setVariants } = useVariants(
     selections,
     product.customizable,
-    product.variant
+    product.variant,
   );
   const [files, setFiles] = useState<
     Array<{
@@ -70,17 +70,17 @@ export default function UpdateProductForm({ product }: { product: Product }) {
           data: null,
           name: image.name,
           url: image.url,
-          value: '',
+          value: "",
           upload_id: image.id,
         };
       }
       return {
         data: null,
-        name: '',
-        url: '',
-        value: '',
+        name: "",
+        url: "",
+        value: "",
       };
-    })
+    }),
   );
   const [model, setModel] = useState<File>();
   const handleUpdateProduct = updateProduct.bind(
@@ -88,28 +88,28 @@ export default function UpdateProductForm({ product }: { product: Product }) {
     product.id,
     product.customizable,
     selections,
-    variants
+    variants,
   );
   const [state, action] = useFormState(
     async (
       pervState: UpdateProductState,
-      formData: FormData
+      formData: FormData,
     ): Promise<UpdateProductState> => {
       if (model) {
-        formData.append('model', model);
+        formData.append("model", model);
       }
       files.forEach((file) => {
         if (file.upload_id) {
-          formData.append('images', file.upload_id);
+          formData.append("images", file.upload_id);
           return;
         }
         if (file.data) {
-          formData.append('images', file.data);
+          formData.append("images", file.data);
         }
       });
       return await handleUpdateProduct(pervState, formData);
     },
-    initialState
+    initialState,
   );
   const handlePriceChange = (numVal: number, index: number) =>
     setVariants((prev) => {
@@ -124,7 +124,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
       });
     });
 
-  console.log(files);
+  // console.log(files);
 
   const handleDeleteImg = (currentKey: number) => {
     setFiles((prev) =>
@@ -133,24 +133,24 @@ export default function UpdateProductForm({ product }: { product: Product }) {
           return initialFile;
         }
         return data;
-      })
+      }),
     );
   };
 
   const handleUploadImage = async (
     e: ChangeEvent<HTMLInputElement>,
-    currentKey: number
+    currentKey: number,
   ) => {
     const newFiles = e.target.files;
     if (newFiles !== null && newFiles.length !== 0) {
       const newFile = newFiles[0];
       if (newFile.size > MaxSizeInBytes) {
-        toast.error('The image size must be no more than 10MB');
+        toast.error("The image size must be no more than 10MB");
         return;
       }
 
       if (files.find((file) => file.data?.name === newFile.name)) {
-        toast.error('You have uploaded this photo as a product image');
+        toast.error("You have uploaded this photo as a product image");
         return;
       }
 
@@ -169,15 +169,15 @@ export default function UpdateProductForm({ product }: { product: Product }) {
     }
   };
 
-  console.log(variants);
+  // console.log(variants);
 
   useEffect(() => {
     if (state.message) {
-      if (state.status === 'error') {
+      if (state.status === "error") {
         toast.error(state.message);
         return;
       }
-      if (state.status === 'success') {
+      if (state.status === "success") {
         toast.success(state.message);
         return;
       }
@@ -186,18 +186,18 @@ export default function UpdateProductForm({ product }: { product: Product }) {
 
   return (
     <form
-      autoComplete='off'
+      autoComplete="off"
       action={action}
-      className='flex flex-col gap-4 w-full mb-24'
+      className="flex flex-col gap-4 w-full mb-24"
     >
       <Input
-        variant='bordered'
-        type='text'
-        label='Product Name'
-        placeholder='Enter Product Name'
-        labelPlacement='outside'
-        radius='sm'
-        name='name'
+        variant="bordered"
+        type="text"
+        label="Product Name"
+        placeholder="Enter Product Name"
+        labelPlacement="outside"
+        radius="sm"
+        name="name"
         errorMessage={
           !!state.errors?.name &&
           state.errors.name.map((error: string) => <p key={error}>{error}</p>)
@@ -206,11 +206,11 @@ export default function UpdateProductForm({ product }: { product: Product }) {
       />
       <Textarea
         defaultValue={product.description}
-        variant='bordered'
-        name='description'
-        label='Description'
-        labelPlacement='outside'
-        placeholder='Enter your description'
+        variant="bordered"
+        name="description"
+        label="Description"
+        labelPlacement="outside"
+        placeholder="Enter your description"
         errorMessage={
           !!state.errors?.description &&
           state.errors.description.map((error: string) => (
@@ -219,7 +219,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
         }
       />
       <SelectCategory
-        name='category'
+        name="category"
         defaultValue={product.category}
         errorMessage={
           !!state.errors?.category &&
@@ -228,21 +228,21 @@ export default function UpdateProductForm({ product }: { product: Product }) {
           ))
         }
       />
-      <div className='flex flex-col gap-4'>
-        <div className='w-full grid grid-cols-2 grid-rows-2 items-center gap-4'>
+      <div className="flex flex-col gap-4">
+        <div className="w-full grid grid-cols-2 grid-rows-2 items-center gap-4">
           <Input
-            variant='bordered'
+            variant="bordered"
             endContent={
-              <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-tiny'>gram</span>
+              <div className="pointer-events-none flex items-center">
+                <span className="text-default-400 text-tiny">gram</span>
               </div>
             }
-            label='Weight'
-            type='number'
-            placeholder='Enter Product Weight'
-            labelPlacement='outside'
-            radius='sm'
-            name='weight'
+            label="Weight"
+            type="number"
+            placeholder="Enter Product Weight"
+            labelPlacement="outside"
+            radius="sm"
+            name="weight"
             defaultValue={product.weight.value.toString()}
             errorMessage={
               !!state.errors?.weight &&
@@ -252,110 +252,110 @@ export default function UpdateProductForm({ product }: { product: Product }) {
             }
           />
           <Input
-            variant='bordered'
+            variant="bordered"
             endContent={
-              <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-tiny'>cm</span>
+              <div className="pointer-events-none flex items-center">
+                <span className="text-default-400 text-tiny">cm</span>
               </div>
             }
             defaultValue={product.dimension.width.toString()}
-            label='Width'
-            type='number'
-            placeholder='Enter Product Width'
-            labelPlacement='outside'
-            radius='sm'
-            name='width'
+            label="Width"
+            type="number"
+            placeholder="Enter Product Width"
+            labelPlacement="outside"
+            radius="sm"
+            name="width"
             errorMessage={
               !!state.errors?.dimension?.filter((err) =>
-                err.includes('width')
+                err.includes("width"),
               ) &&
               state.errors.dimension
-                .filter((err) => err.includes('width'))
+                .filter((err) => err.includes("width"))
                 .map((error: string) => <p key={error}>{error}</p>)
             }
           />
           <Input
-            variant='bordered'
+            variant="bordered"
             endContent={
-              <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-tiny'>cm</span>
+              <div className="pointer-events-none flex items-center">
+                <span className="text-default-400 text-tiny">cm</span>
               </div>
             }
             defaultValue={product.dimension.length.toString()}
-            label='Length'
-            type='number'
-            placeholder='Enter Product Length'
-            labelPlacement='outside'
-            radius='sm'
-            name='length'
+            label="Length"
+            type="number"
+            placeholder="Enter Product Length"
+            labelPlacement="outside"
+            radius="sm"
+            name="length"
             errorMessage={
               !!state.errors?.dimension?.filter((err) =>
-                err.includes('length')
+                err.includes("length"),
               ) &&
               state.errors.dimension
-                .filter((err) => err.includes('length'))
+                .filter((err) => err.includes("length"))
                 .map((error: string) => <p key={error}>{error}</p>)
             }
           />
           <Input
-            variant='bordered'
+            variant="bordered"
             endContent={
-              <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-tiny'>cm</span>
+              <div className="pointer-events-none flex items-center">
+                <span className="text-default-400 text-tiny">cm</span>
               </div>
             }
             defaultValue={product.dimension.height.toString()}
-            type='number'
-            label='Height'
-            placeholder='Enter Product Height'
-            labelPlacement='outside'
-            radius='sm'
-            name='height'
+            type="number"
+            label="Height"
+            placeholder="Enter Product Height"
+            labelPlacement="outside"
+            radius="sm"
+            name="height"
             errorMessage={
               !!state.errors?.dimension?.filter((err) =>
-                err.includes('height')
+                err.includes("height"),
               ) &&
               state.errors.dimension
-                .filter((err) => err.includes('height'))
+                .filter((err) => err.includes("height"))
                 .map((error: string) => <p key={error}>{error}</p>)
             }
           />
         </div>
       </div>
-      <div className='flex flex-col gap-4'>
-        <div className='flex flex-col gap-1'>
-          <span className='text-sm'>Product Images</span>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <span className="text-sm">Product Images</span>
           {!!state.errors?.images && (
-            <span className='flex flex-col gap-1 text-tiny text-danger'>
+            <span className="flex flex-col gap-1 text-tiny text-danger">
               {state.errors.images.map((error: string) => (
                 <p key={error}>{error}</p>
               ))}
             </span>
           )}
         </div>
-        <div className='flex justify-start gap-5'>
+        <div className="flex justify-start gap-5">
           {files.map((file, key) => (
             <div
               key={key}
-              className={clsx('w-36 h-36', {
-                'border-2 rounded-md border-dashed': !!!file.url,
-                'border border-black rounded-md border-solid': !!file.url,
+              className={clsx("w-36 h-36", {
+                "border-2 rounded-md border-dashed": !!!file.url,
+                "border border-black rounded-md border-solid": !!file.url,
               })}
             >
               {file.name ? (
-                <div className='group w-full h-full relative'>
+                <div className="group w-full h-full relative">
                   <Image
                     src={file.url}
                     alt={file.name}
                     fill
-                    className='object-contain'
+                    className="object-contain"
                     priority={true}
                   />
                   <Button
-                    className='absolute bottom-1 right-1 hidden group-hover:flex'
+                    className="absolute bottom-1 right-1 hidden group-hover:flex"
                     isIconOnly
-                    variant='ghost'
-                    color='danger'
+                    variant="ghost"
+                    color="danger"
                     onClick={() => handleDeleteImg(key)}
                   >
                     <RiDeleteBin5Line size={18} />
@@ -364,10 +364,10 @@ export default function UpdateProductForm({ product }: { product: Product }) {
               ) : (
                 <label
                   htmlFor={`img-empty-${key}`}
-                  className='hover:bg-foreground-200 w-full h-full flex flex-col gap-0 items-center justify-center cursor-pointer text-[#31353bad]'
+                  className="hover:bg-foreground-200 w-full h-full flex flex-col gap-0 items-center justify-center cursor-pointer text-[#31353bad]"
                 >
                   <RiImageAddFill size={64} />
-                  <span>{key === 0 ? 'Foto Utama' : `Foto ${key + 1}`}</span>
+                  <span>{key === 0 ? "Foto Utama" : `Foto ${key + 1}`}</span>
                 </label>
               )}
             </div>
@@ -375,7 +375,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
         </div>
         {[...Array(3)].map((_, key) => (
           <input
-            type='file'
+            type="file"
             hidden
             id={`img-empty-${key}`}
             key={key}
@@ -383,15 +383,15 @@ export default function UpdateProductForm({ product }: { product: Product }) {
             onChange={(e) => {
               handleUploadImage(e, key);
             }}
-            accept='.jpg, .jpeg, .png'
+            accept=".jpg, .jpeg, .png"
           />
         ))}
       </div>
-      <div className='flex flex-col gap-4'>
-        <div className='flex flex-col gap-1'>
-          <span className='text-sm'>Product Model</span>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <span className="text-sm">Product Model</span>
           {!!state.errors?.model && (
-            <span className='flex flex-col gap-1 text-tiny text-danger'>
+            <span className="flex flex-col gap-1 text-tiny text-danger">
               {state.errors.model.map((error: string) => (
                 <p key={error}>{error}</p>
               ))}
@@ -399,14 +399,14 @@ export default function UpdateProductForm({ product }: { product: Product }) {
           )}
         </div>
         {!!product.model && (
-          <span className='text-sm'>
+          <span className="text-sm">
             model: {model?.name ?? product.model.name}
           </span>
         )}
         <input
-          type='file'
-          className='border-2 cursor-pointer border-foreground-200 hover:shadow-sm hover:border-foreground-400 border-solid rounded-md p-3'
-          accept='.glb'
+          type="file"
+          className="border-2 cursor-pointer border-foreground-200 hover:shadow-sm hover:border-foreground-400 border-solid rounded-md p-3"
+          accept=".glb"
           onChange={(e) => {
             const files = e.target.files;
             if (files) {
@@ -415,76 +415,76 @@ export default function UpdateProductForm({ product }: { product: Product }) {
           }}
         />
       </div>
-      <div className='flex flex-col gap-1 w-full'>
+      <div className="flex flex-col gap-1 w-full">
         {state.errors?.variant && (
-          <span className='flex flex-col gap-1 text-tiny text-danger'>
+          <span className="flex flex-col gap-1 text-tiny text-danger">
             {state.errors.variant.map((error: string) => (
               <p key={error}>{error}</p>
             ))}
           </span>
         )}
         {state.errors?.selections && (
-          <span className='flex flex-col gap-1 text-tiny text-danger'>
+          <span className="flex flex-col gap-1 text-tiny text-danger">
             {state.errors.selections.map((error: string) => (
               <p key={error}>{error}</p>
             ))}
           </span>
         )}
-        <div className='flex gap-4 w-full items-start'>
+        <div className="flex gap-4 w-full items-start">
           <Switch
             defaultSelected={product.featured}
-            value='true'
+            value="true"
             classNames={{
               base: cn(
-                'inline-flex flex-row-reverse w-full max-w-full bg-content1 hover:bg-content2 items-center',
-                'justify-between cursor-pointer rounded-lg gap-2 p-4 border-2 border-foreground-600',
-                'data-[selected=true]:border-primary'
+                "inline-flex flex-row-reverse w-full max-w-full bg-content1 hover:bg-content2 items-center",
+                "justify-between cursor-pointer rounded-lg gap-2 p-4 border-2 border-foreground-600",
+                "data-[selected=true]:border-primary",
               ),
-              wrapper: 'p-0 h-4 overflow-visible bg-foreground-600',
+              wrapper: "p-0 h-4 overflow-visible bg-foreground-600",
               thumb: cn(
-                'w-6 h-6 border-2 shadow-lg border-foreground-600',
-                'group-data-[hover=true]:border-primary',
+                "w-6 h-6 border-2 shadow-lg border-foreground-600",
+                "group-data-[hover=true]:border-primary",
                 //selected
-                'group-data-[selected=true]:ml-6',
+                "group-data-[selected=true]:ml-6",
                 // pressed
-                'group-data-[pressed=true]:w-7',
-                'group-data-[selected]:group-data-[pressed]:ml-4'
+                "group-data-[pressed=true]:w-7",
+                "group-data-[selected]:group-data-[pressed]:ml-4",
               ),
             }}
-            name='featured'
+            name="featured"
           >
-            <div className='flex flex-col gap-1'>
-              <p className='text-medium'>Featured Product</p>
-              <p className='text-tiny text-default-600'>
+            <div className="flex flex-col gap-1">
+              <p className="text-medium">Featured Product</p>
+              <p className="text-tiny text-default-600">
                 tetapkan produk sebagai produk unggulan
               </p>
             </div>
           </Switch>
           <Switch
             defaultSelected={product.available}
-            value='true'
+            value="true"
             classNames={{
               base: cn(
-                'inline-flex flex-row-reverse w-full max-w-full bg-content1 hover:bg-content2 items-center',
-                'justify-between cursor-pointer rounded-lg gap-2 p-4 border-2 border-foreground-600',
-                'data-[selected=true]:border-primary'
+                "inline-flex flex-row-reverse w-full max-w-full bg-content1 hover:bg-content2 items-center",
+                "justify-between cursor-pointer rounded-lg gap-2 p-4 border-2 border-foreground-600",
+                "data-[selected=true]:border-primary",
               ),
-              wrapper: 'p-0 h-4 overflow-visible bg-foreground-600',
+              wrapper: "p-0 h-4 overflow-visible bg-foreground-600",
               thumb: cn(
-                'w-6 h-6 border-2 shadow-lg border-foreground-600',
-                'group-data-[hover=true]:border-primary',
+                "w-6 h-6 border-2 shadow-lg border-foreground-600",
+                "group-data-[hover=true]:border-primary",
                 //selected
-                'group-data-[selected=true]:ml-6',
+                "group-data-[selected=true]:ml-6",
                 // pressed
-                'group-data-[pressed=true]:w-7',
-                'group-data-[selected]:group-data-[pressed]:ml-4'
+                "group-data-[pressed=true]:w-7",
+                "group-data-[selected]:group-data-[pressed]:ml-4",
               ),
             }}
-            name='available'
+            name="available"
           >
-            <div className='flex flex-col gap-1'>
-              <p className='text-medium'>Available</p>
-              <p className='text-tiny text-default-600'>
+            <div className="flex flex-col gap-1">
+              <p className="text-medium">Available</p>
+              <p className="text-tiny text-default-600">
                 tetapkan ketersediaan produk
               </p>
             </div>
@@ -495,18 +495,18 @@ export default function UpdateProductForm({ product }: { product: Product }) {
       {!product.customizable ? (
         <>
           <Input
-            variant='bordered'
+            variant="bordered"
             startContent={
-              <div className='pointer-events-none flex items-center'>
-                <span className='text-default-400 text-tiny'>Rp</span>
+              <div className="pointer-events-none flex items-center">
+                <span className="text-default-400 text-tiny">Rp</span>
               </div>
             }
-            label='Product Price'
-            type='number'
-            placeholder='Enter Product Price'
-            labelPlacement='outside'
-            radius='sm'
-            name='price'
+            label="Product Price"
+            type="number"
+            placeholder="Enter Product Price"
+            labelPlacement="outside"
+            radius="sm"
+            name="price"
             defaultValue={product.variant[0].price.toString()}
             errorMessage={
               !!state.errors?.price &&
@@ -516,13 +516,13 @@ export default function UpdateProductForm({ product }: { product: Product }) {
             }
           />
           <Input
-            variant='bordered'
-            label='Product Stock'
-            type='number'
-            placeholder='Enter Product Stock'
-            labelPlacement='outside'
-            radius='sm'
-            name='stock'
+            variant="bordered"
+            label="Product Stock"
+            type="number"
+            placeholder="Enter Product Stock"
+            labelPlacement="outside"
+            radius="sm"
+            name="stock"
             defaultValue={product.variant[0].stock?.toString()}
             errorMessage={
               !!state.errors?.stock &&
@@ -534,12 +534,12 @@ export default function UpdateProductForm({ product }: { product: Product }) {
         </>
       ) : (
         <>
-          <div className='flex flex-col gap-5'>
-            <div className='flex gap-3 items-center'>
-              <span className='text-sm'>Variants</span>
+          <div className="flex flex-col gap-5">
+            <div className="flex gap-3 items-center">
+              <span className="text-sm">Variants</span>
               {selections.length === 0 ? (
                 <Button
-                  onClick={() => setSelections([{ name: '', options: [] }])}
+                  onClick={() => setSelections([{ name: "", options: [] }])}
                   isDisabled={selections.length !== 0}
                 >
                   Add Variants
@@ -559,10 +559,10 @@ export default function UpdateProductForm({ product }: { product: Product }) {
             {selections.map((selection, parentKey) => (
               <div
                 key={selection.name}
-                className='w-full flex flex-col gap-3 items-start'
+                className="w-full flex flex-col gap-3 items-start"
               >
                 <div
-                  className={clsx('flex gap-2', {
+                  className={clsx("flex gap-2", {
                     hidden: selection.options.length === 0,
                   })}
                 >
@@ -576,38 +576,38 @@ export default function UpdateProductForm({ product }: { product: Product }) {
                               ...currSel,
                               options: currSel.options.filter(
                                 (currOption) =>
-                                  currOption.value !== option.value
+                                  currOption.value !== option.value,
                               ),
                             };
-                          })
+                          }),
                         )
                       }
-                      variant='flat'
+                      variant="flat"
                     >
                       {!!option.hex_code ? (
-                        <div className='flex gap-2'>
+                        <div className="flex gap-2">
                           <span
                             className={`block w-4 h-4`}
                             style={{ backgroundColor: option.hex_code }}
                           ></span>
-                          <span>{option.value.replaceAll('-', ' ')}</span>
+                          <span>{option.value.replaceAll("-", " ")}</span>
                         </div>
                       ) : (
-                        option.value.replaceAll('-', ' ')
+                        option.value.replaceAll("-", " ")
                       )}
                     </Chip>
                   ))}
                 </div>
-                <div className='w-full flex gap-3 items-start'>
+                <div className="w-full flex gap-3 items-start">
                   <Select
-                    variant='bordered'
-                    label='Variant'
-                    labelPlacement='inside'
-                    placeholder='Select variant'
-                    size='md'
-                    selectionMode='single'
+                    variant="bordered"
+                    label="Variant"
+                    labelPlacement="inside"
+                    placeholder="Select variant"
+                    size="md"
+                    selectionMode="single"
                     selectedKeys={
-                      selection.name !== ''
+                      selection.name !== ""
                         ? new Set([selection.name])
                         : new Set()
                     }
@@ -617,12 +617,12 @@ export default function UpdateProductForm({ product }: { product: Product }) {
                           .filter((sel) => sel.name)
                           .map((sel) => {
                             return sel.name;
-                          })
+                          }),
                       )
                     }
                     classNames={{
-                      base: 'max-w-xs',
-                      trigger: 'h-12',
+                      base: "max-w-xs",
+                      trigger: "h-12",
                     }}
                   >
                     {listSelectionType.map((unit) => (
@@ -644,23 +644,23 @@ export default function UpdateProductForm({ product }: { product: Product }) {
                       </SelectItem>
                     ))}
                   </Select>
-                  {selection.name === 'color' ? (
+                  {selection.name === "color" ? (
                     <SelectColors setSelectedColors={setSelections} />
                   ) : null}
-                  {selection.name === 'material' ? (
+                  {selection.name === "material" ? (
                     <InputMaterials setSelectedColors={setSelections} />
                   ) : null}
                 </div>
               </div>
             ))}
             {selections.length === 1 ? (
-              <div className='flex justify-end'>
+              <div className="flex justify-end">
                 <Button
-                  variant='ghost'
+                  variant="ghost"
                   onClick={() =>
                     setSelections((prev) => [
                       ...prev,
-                      { name: '', options: [] },
+                      { name: "", options: [] },
                     ])
                   }
                   isDisabled={selections.length !== 1}
@@ -670,38 +670,38 @@ export default function UpdateProductForm({ product }: { product: Product }) {
               </div>
             ) : null}
           </div>
-          <div className='w-2/3 rounded-md border-2 border-solid m-auto'>
-            <div className='flex flex-col gap-3 w-full'>
-              <span className='p-4'>Product Variants</span>
-              <div className='flex flex-col gap-3 w-full p-4'>
+          <div className="w-2/3 rounded-md border-2 border-solid m-auto">
+            <div className="flex flex-col gap-3 w-full">
+              <span className="p-4">Product Variants</span>
+              <div className="flex flex-col gap-3 w-full p-4">
                 {variants.map((variant, index) => (
-                  <div className='w-full flex flex-col gap-2' key={index}>
-                    <div className='w-full flex flex-col gap-2'>
-                      <div className='flex gap-5 items-center'>
-                        <span className='text-tiny'>Variant</span>
+                  <div className="w-full flex flex-col gap-2" key={index}>
+                    <div className="w-full flex flex-col gap-2">
+                      <div className="flex gap-5 items-center">
+                        <span className="text-tiny">Variant</span>
                         <Chip>
                           {variant.variant_name?.replace(/-|_/gi, (matched) => {
-                            if (matched === '-') {
-                              return ' ';
+                            if (matched === "-") {
+                              return " ";
                             }
-                            return '/';
+                            return "/";
                           })}
                         </Chip>
                       </div>
                       <Input
                         startContent={
-                          <div className='pointer-events-none flex items-center'>
-                            <span className='text-default-400 text-tiny'>
+                          <div className="pointer-events-none flex items-center">
+                            <span className="text-default-400 text-tiny">
                               Rp
                             </span>
                           </div>
                         }
-                        label='Price'
-                        type='number'
-                        labelPlacement='outside-left'
+                        label="Price"
+                        type="number"
+                        labelPlacement="outside-left"
                         fullWidth
                         classNames={{
-                          base: 'gap-6',
+                          base: "gap-6",
                         }}
                         value={variant.price.toString()}
                         onValueChange={(value) => {
@@ -716,7 +716,7 @@ export default function UpdateProductForm({ product }: { product: Product }) {
                         }
                       />
                     </div>
-                    <Divider className='w-11/12 m-auto' />
+                    <Divider className="w-11/12 m-auto" />
                   </div>
                 ))}
               </div>
@@ -724,11 +724,11 @@ export default function UpdateProductForm({ product }: { product: Product }) {
           </div>
         </>
       )}
-      <div className='flex justify-end items-center gap-3'>
-        <Button as={Link} href='/dashboard/products'>
+      <div className="flex justify-end items-center gap-3">
+        <Button as={Link} href="/dashboard/products">
           Cancel
         </Button>
-        <SubmitButton color='primary'>Save</SubmitButton>
+        <SubmitButton color="primary">Save</SubmitButton>
       </div>
     </form>
   );

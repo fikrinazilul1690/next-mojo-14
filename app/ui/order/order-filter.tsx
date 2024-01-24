@@ -1,35 +1,35 @@
-'use client';
+"use client";
 
-import { RadioGroup } from '@nextui-org/react';
-import { CustomRadio } from '@/app/ui/custom-radio';
-import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import { RadioGroup } from "@nextui-org/react";
+import { CustomRadio } from "@/app/ui/custom-radio";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 
 // Todo: integrate with rtk query and revalidate
 
 const orderStatuses = [
   {
-    value: 'all',
-    name: 'all',
+    value: "all",
+    name: "All",
   },
   {
-    value: 'on_progress',
-    name: 'On progress',
+    value: "on_progress",
+    name: "On progress",
   },
   {
-    value: 'confirmed',
-    name: 'Confirmed',
+    value: "confirmed",
+    name: "Confirmed",
   },
   {
-    value: 'allocated',
-    name: 'Allocated',
+    value: "allocated",
+    name: "Allocated",
   },
   {
-    value: 'on_delivery',
-    name: 'On delivery',
+    value: "on_delivery",
+    name: "On delivery",
   },
   {
-    value: 'delivered',
-    name: 'Delivered',
+    value: "delivered",
+    name: "Delivered",
   },
 ];
 
@@ -45,11 +45,11 @@ export default function OrderStatusFilter({
   const searchParams = useSearchParams();
   const handleChange = (status: string) => {
     const params = new URLSearchParams(searchParams);
-    params.set('page', String(1));
-    if (status && status !== 'all') {
-      params.set('status', status);
+    params.set("page", String(1));
+    if (status && status !== "all") {
+      params.set("status", status);
     } else {
-      params.delete('status');
+      params.delete("status");
     }
     replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
@@ -58,10 +58,10 @@ export default function OrderStatusFilter({
       className={`gap-1 justify-center ${className}`}
       classNames={{
         wrapper:
-          'max-sm:justify-start flex-nowrap overflow-x-auto overflow-y-hidden px-3 pb-1',
+          "max-sm:justify-start flex-nowrap overflow-x-auto overflow-y-hidden px-3 pb-1",
       }}
-      orientation='horizontal'
-      value={status ?? 'all'}
+      orientation="horizontal"
+      value={status ?? "all"}
       onValueChange={handleChange}
     >
       {orderStatuses.map((status) => (
